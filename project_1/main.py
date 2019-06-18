@@ -30,12 +30,18 @@ def main():
     # unsqueeze函数可以将一维数据变成二维数据，在torch中只能处理二维数据
     # 数据点按顺序排序，否则会出现数据点散乱
     # x_init=torch.Tensor(np.random.random(30))
-    x_init=torch.Tensor(np.sort(np.random.random(30))) 
+    # x_init=torch.Tensor(np.sort(np.random.random(1000)))
+
+
+    x_init=torch.Tensor(np.sort(np.random.random(1000)*1000)) 
+    x_init=torch.Tensor(np.array(x_init)/1000 - 0.5)
+
+
     x= torch.unsqueeze(x_init,dim=1)
     # 拟合任意点
     # y= torch.unsqueeze(torch.Tensor(np.random.random(10)),dim=1)
     # 拟合任意方程组
-    y= torch.unsqueeze(torch.Tensor(x_init**5+0.3*x_init**4+0.13*x_init**2+0.05*x_init+3),dim=1)
+    y= torch.unsqueeze(torch.Tensor(0.5*x_init**5+3*x_init**4+0.13*x_init**2+0.05*x_init+3),dim=1)
     # print("x___",type(x))
     losses=[]
     x_list=[]
@@ -57,17 +63,28 @@ def main():
         loss.backward()
         optimizer.step()
 
+        losses.append(loss)
+        losses=list(filter(lambda x: x<2,losses)) #过滤部分损失，使图象更直观
+        
         x_list.append(input)
         y_list.append(output)
         #画点
         plt.clf()
-        plt.scatter(x,y,c=u'r',marker=u'*')
+        plt.subplot(2, 1, 1)
+        
+        plt.scatter(x,y,c=u'g',marker=u'*')
         #参数c指定连线的颜色，linewidth指定连线宽度，alpha指定连线的透明度
         # ax.plot(x.numpy(), output.data.numpy(), color='b', linewidth=1, alpha=0.6)
         # 没有误差点
         plt.plot(x.numpy(), y.numpy(), color='b', linewidth=1, alpha=0.6)
         # 实时训练点
         plt.plot(x.numpy(), output.data.numpy(), color='r', linewidth=1, alpha=0.6)
+        # plt.pause(0.1)
+        plt.ylabel('Test plot')
+
+        plt.subplot(2, 1, 2)
+        plt.plot(losses)
+        plt.ylabel('Test losses')
         plt.pause(0.1)
 
     plt.show()

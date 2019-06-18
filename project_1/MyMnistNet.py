@@ -22,6 +22,8 @@ class MyMnistNet(nn.Module):
         y = self.linear1(input)
         y = self.relu(y)
         y = self.linear2(y)
+        y = self.relu(y)
         y = self.linear3(y)
+        y = self.relu(y)
         y = self.linear4(y)
         return y
