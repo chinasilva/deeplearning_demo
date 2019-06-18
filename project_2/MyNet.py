@@ -9,7 +9,9 @@ class MyNet(nn.Module):
             nn.ReLU(),
             nn.Linear(in_features=2048,out_features=512),
             nn.ReLU(),
-            nn.Linear(in_features=512,out_features=4),
+            nn.Linear(in_features=512,out_features=64),
+            nn.ReLU(),
+            nn.Linear(in_features=64,out_features=4),
         )
 
     def forward(self,input):
