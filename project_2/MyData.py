@@ -22,6 +22,7 @@ class MyData(data.Dataset):
         # data.dataloader()
         imgInfo=self.dataset[index]
         label=str(imgInfo).replace('pic','').replace('.jpg','')
+        #拆分图片文件，得到两个点坐标,即:标签，并将输出转化成Tensor类型
         x1=label.split(',')[0]
         y1=label.split(',')[1]
         x2=label.split(',')[2]
@@ -32,14 +33,6 @@ class MyData(data.Dataset):
         img=Image.open(imagePath)
         #imageData 对图片进行归一化，去均值操作
         imageData=torch.Tensor(np.array(img)/255 - 0.5)
-        # label=np.array(list(label))
 
         return imagePath,imageData,label
 
-# if __name__ == "__main__":
-#     print(np.array([2,3]))
-#     myData=MyData("img")
-#     x=myData[6000][0]
-#     y=myData[6000][1]
-#     print("x:",x)
-#     print("y:",y)
