@@ -4,7 +4,6 @@ import numpy as np
 
 class MyUtils():
     def __init__(self):
-
         return
     def make_one_hot(self,labels, C=2):
         '''
@@ -39,9 +38,8 @@ class MyUtils():
         return device
 
     def changeChannel(self):
-        input_path = '.\project2\logo.jpg'
-        output_path = '.\project2\logo4channel2.jpg'
-
+        input_path = '.\project_2\logo.jpg'
+        output_path = '.\project_2\logo4channel.jpg'
         
         img = cv2.imread(input_path)
 
@@ -54,5 +52,11 @@ class MyUtils():
         img_BGRA = cv2.merge((b_channel, g_channel, r_channel, alpha_channel))
 
         cv2.imwrite(output_path,img_BGRA)
+
+
+if __name__ == "__main__":
+    utils=MyUtils()
+    utils.changeChannel()
+
 
 

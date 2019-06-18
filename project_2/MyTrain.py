@@ -25,6 +25,7 @@ class MyTrain():
         self.optimizer=torch.optim.Adam(self.myNet.parameters())
         self.lossFun=nn.MSELoss()
         self.trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True)
+        # 输出图片位置
         self._OUT_DIR="./pic3"
 
 
@@ -44,6 +45,7 @@ class MyTrain():
                 loss.backward()
                 self.optimizer.step()
 
+                #二十轮次后进行保存图片
                 if j%10==0 and i>20:
                     x1=output[0][0].data.item()
                     y1=output[0][1].data.item()
@@ -55,16 +57,7 @@ class MyTrain():
                         originImg.polygon([(x1,y1),(x2,y1),(x2,y2),(x1,y2)],outline=(0,255,0))
                         # img.show()
                         img.save(self._OUT_DIR+'/pic'+ str(i)+'.jpg', format="jpeg")
-                        
-                        # plt.clf()
-                        # fig,ax = plt.subplots(1)
-                        # rect = patches.Rectangle((x1,y1),width,width,linewidth=1,edgecolor='r',facecolor='none')
-                        # ax.add_patch(rect)
-                        # ax.imshow(img)
-                        # plt.pause(0.1)
-                        # # plt.savefig
-                        # plt.show(block=False)
-
+                       
             print("loss:",loss.data)
             b=datetime.now()
             print("第{}轮次,耗时{}秒".format(i,(b-a).seconds))
@@ -85,11 +78,3 @@ class MyTrain():
     
     def changeLogoChannel(self):
         self.myUtils.changeChannel()
-
-if __name__ == "__main__":
-    path=r"./pic2"
-    epoch=100
-    batchSize=100
-    myTrain=MyTrain(path,epoch,batchSize)
-    # myTrain.train()
-    myTrain.changeLogoChannel()

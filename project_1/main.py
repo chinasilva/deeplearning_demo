@@ -28,11 +28,13 @@ def main():
 
     # 数据构造
     # unsqueeze函数可以将一维数据变成二维数据，在torch中只能处理二维数据
-    # x = torch.unsqueeze(torch.linspace(-4, 4, 80), dim=1)
-    x_init=torch.Tensor(np.sort(np.random.random(30))) 
+    # 数据点按顺序排序，否则会出现数据点散乱
     # x_init=torch.Tensor(np.random.random(30))
+    x_init=torch.Tensor(np.sort(np.random.random(30))) 
     x= torch.unsqueeze(x_init,dim=1)
+    # 拟合任意点
     # y= torch.unsqueeze(torch.Tensor(np.random.random(10)),dim=1)
+    # 拟合任意方程组
     y= torch.unsqueeze(torch.Tensor(x_init**5+0.3*x_init**4+0.13*x_init**2+0.05*x_init+3),dim=1)
     # print("x___",type(x))
     losses=[]
