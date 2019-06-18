@@ -37,7 +37,7 @@ class MyTrain():
             for j,(imagePath,x,y) in enumerate(self.trainData):
                 x=x.view(-1,100*100*3).to(self.device)
                 output=self.myNet(x).to(self.device)
-                y=torch.Tensor(y).to(self.device)
+                y=y.to(self.device)
                 loss=self.lossFun(y,output)
                 losslst.append(loss)
 
@@ -47,20 +47,32 @@ class MyTrain():
 
                 #二十轮次后进行保存图片
                 if j%10==0 and i>20:
-                    x1=output[0][0].data.item()
-                    y1=output[0][1].data.item()
-                    x2=output[0][2].data.item()
-                    y2=output[0][3].data.item()
-                    width=y2-y1
+                    # x与y位置与标签一致
+                    result=output[0]
+                    x1=result[0].data.item()
+                    y1=result[1].data.item()
+                    x2=result[2].data.item()
+                    y2=result[3].data.item()
+                    width=x2-x1
+                    height=y2-y1
                     with Image.open(imagePath[j]) as img:
-                        originImg =ImageDraw.Draw(img)
-                        originImg.polygon([(x1,y1),(x2,y1),(x2,y2),(x1,y2)],outline=(0,255,0))
+                        # originImg =ImageDraw.Draw(img)
+                        # originImg.polygon([(x1,y1),(x2,y1),(x2,y2),(x1,y2)],outline=(0,255,0))
                         # img.show()
-                        img.save(self._OUT_DIR+'/pic'+ str(i)+'.jpg', format="jpeg")
+                        # img.save(self._OUT_DIR+'/pic'+ str(i)+'.jpg', format="jpeg")
+                        
+                        # 使用matplotlib圈图
+                        plt.clf()
+                        fig,ax = plt.subplots(1)
+                        rect = patches.Rectangle((x1,y1),width,height,linewidth=1,edgecolor='r',facecolor='none')
+                        ax.add_patch(rect)
+                        ax.imshow(img)
+                        plt.pause(0.1)
+                        plt.show(block=False)
                        
             print("loss:",loss.data)
             b=datetime.now()
-            print("第{}轮次,耗时{}秒".format(i,(b-a).seconds))
+            print("第{}轮次,耗时{}ms".format(i,(b-a).microseconds//1000))
 
 
         
