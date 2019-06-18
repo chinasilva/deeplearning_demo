@@ -12,16 +12,24 @@ class MyNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.model= nn.Sequential(
-            nn.Conv2d(in_channels=3,out_channels=63,kernel_size=3, padding=1),
-            
+            nn.Conv2d(in_channels=3,out_channels=96,kernel_size=3, padding=1,groups=3),
+            nn.BatchNorm2d(num_features=96),
             nn.MaxPool2d(kernel_size=2, stride=2),
             nn.ReLU(),
-            nn.Conv2d(in_channels=63,out_channels=30,kernel_size=3, padding=1),
+
+            nn.Conv2d(in_channels=96,out_channels=246,kernel_size=3, padding=1,groups=3),
+            nn.BatchNorm2d(num_features=246),
             nn.MaxPool2d(kernel_size=2, stride=2),
             nn.ReLU(),
-            nn.Conv2d(in_channels=30,out_channels=15,kernel_size=3, padding=1),
+
+            nn.Conv2d(in_channels=246,out_channels=15,kernel_size=3, padding=1,groups=3),
+            nn.BatchNorm2d(num_features=15),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.ReLU()
+            nn.ReLU(),
+
+            #通道融合
+            # nn.Conv2d(in_channels=96,out_channels=15,kernel_size=3, padding=1),
+
         )
         self.line=nn.Sequential( 
             nn.Linear(in_features=2160,out_features=512),

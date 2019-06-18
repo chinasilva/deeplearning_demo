@@ -24,6 +24,8 @@ class MyTrain():
         # self.vggNet=VGGNet('MYVGG').to(self.device)
         self.myData=MyData(self.path)
         self.optimizer=torch.optim.Adam(self.myNet.parameters())
+        self.scheduler =torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=30, gamma=0.1)
+        # self.lossFun=nn.CrossEntropyLoss()
         self.lossFun=nn.MSELoss()
         self.trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True)
         # 输出图片位置
@@ -76,7 +78,7 @@ class MyTrain():
                         # ax.imshow(img)
                         # plt.pause(0.1)
                         # plt.show()
-                       
+            self.scheduler.step()       
             print("loss:",loss.data)
             b=datetime.now()
             print("第{}轮次,耗时{}ms".format(i,(b-a).microseconds//1000))
