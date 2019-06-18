@@ -10,7 +10,7 @@ import cv2
 import matplotlib.patches as patches
 
 from MyData import MyData
-from MyNet import MyNet
+from MyNet import MyNet,VGGNet
 from MyUtils import MyUtils
 
 class MyTrain():
@@ -21,6 +21,7 @@ class MyTrain():
         self.myUtils=MyUtils()
         self.device=self.myUtils.deviceFun()
         self.myNet=MyNet().to(self.device)
+        # self.vggNet=VGGNet('MYVGG').to(self.device)
         self.myData=MyData(self.path)
         self.optimizer=torch.optim.Adam(self.myNet.parameters())
         self.lossFun=nn.MSELoss()
@@ -35,7 +36,13 @@ class MyTrain():
             print("epoch:",i)
             a=datetime.now()
             for j,(imagePath,x,y) in enumerate(self.trainData):
-                x=x.view(-1,100*100*3).to(self.device)
+
+                # x=x.view(-1,100*100*3).to(self.device)
+                # output=self.myNet(x).to(self.device)
+                
+                # 输入进行图象变换 (N,H,W,C) -> (N,C,H,W)
+                x=x.permute(0,3,1,2).to(self.device)
+
                 output=self.myNet(x).to(self.device)
                 y=y.to(self.device)
                 loss=self.lossFun(y,output)
@@ -56,19 +63,19 @@ class MyTrain():
                     width=x2-x1
                     height=y2-y1
                     with Image.open(imagePath[j]) as img:
-                        # originImg =ImageDraw.Draw(img)
-                        # originImg.polygon([(x1,y1),(x2,y1),(x2,y2),(x1,y2)],outline=(0,255,0))
-                        # img.show()
-                        # img.save(self._OUT_DIR+'/pic'+ str(i)+'.jpg', format="jpeg")
+                        originImg =ImageDraw.Draw(img)
+                        originImg.polygon([(x1,y1),(x2,y1),(x2,y2),(x1,y2)],outline=(0,255,0))
+                        img.show()
+                        img.save(self._OUT_DIR+'/pic'+ str(i)+'.jpg', format="jpeg")
                         
-                        # 使用matplotlib圈图
-                        plt.clf()
-                        fig,ax = plt.subplots(1)
-                        rect = patches.Rectangle((x1,y1),width,height,linewidth=1,edgecolor='r',facecolor='none')
-                        ax.add_patch(rect)
-                        ax.imshow(img)
-                        plt.pause(0.1)
-                        plt.show(block=False)
+                        # # 使用matplotlib圈图
+                        # plt.clf()
+                        # fig,ax = plt.subplots(1)
+                        # rect = patches.Rectangle((x1,y1),width,height,linewidth=1,edgecolor='r',facecolor='none')
+                        # ax.add_patch(rect)
+                        # ax.imshow(img)
+                        # plt.pause(0.1)
+                        # plt.show()
                        
             print("loss:",loss.data)
             b=datetime.now()
