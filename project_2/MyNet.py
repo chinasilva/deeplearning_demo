@@ -47,8 +47,6 @@ class MyNet(nn.Module):
         return self.line(output)
 
 
-
-
 class VGGNet(nn.Module):
 
 	def __init__(self,vgg_name):
@@ -75,3 +73,5 @@ class VGGNet(nn.Module):
 				in_channels = x
 		layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
 		return nn.Sequential(*layers)
+
+

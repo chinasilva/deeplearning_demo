@@ -73,4 +73,5 @@ def main():
     plt.show()
 
 if __name__ == "__main__":
-    main()
+    print( torch.randn(20, 16, 3))
+    # main()
