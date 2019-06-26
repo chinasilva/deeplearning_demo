@@ -52,7 +52,7 @@ class VGGNet(nn.Module):
 	def __init__(self,vgg_name):
 		super().__init__()
 		self.features = self._make_layers(cfg[vgg_name])
-		self.classifier = nn.Linear(64, 4)
+		self.classifier = nn.Linear(4608, 4)
 
 	def forward(self, x):
 		out = self.features(x)

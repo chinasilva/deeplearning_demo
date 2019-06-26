@@ -12,7 +12,7 @@ import matplotlib.patches as patches
 from MyData import MyData
 from MyNet import MyNet,VGGNet
 from MyUtils import MyUtils
-from ResNet import resnet34,resnet18
+from ResNet import resnet34,resnet18,resnet50,resnet101,resnet152
 class MyTrain():
     def __init__(self,path,epoch,batchSize):
         self.path=path
@@ -21,12 +21,12 @@ class MyTrain():
         self.myUtils=MyUtils()
         self.device=self.myUtils.deviceFun()
         # self.myNet=MyNet().to(self.device)
-        # self.vggNet=VGGNet('MYVGG').to(self.device)
+        self.vggNet=VGGNet('VGG11').to(self.device)
         # self.ResNet=resnet34(4).to(self.device)
-        self.ResNet=resnet18(4).to(self.device)
+        # self.ResNet=resnet101(4).to(self.device)
 
         self.myData=MyData(self.path)
-        self.optimizer=torch.optim.Adam(self.ResNet.parameters())
+        self.optimizer=torch.optim.Adam(self.vggNet.parameters())
         self.scheduler =torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=30, gamma=0.1)
         # self.lossFun=nn.CrossEntropyLoss()
         self.lossFun=nn.MSELoss()
@@ -47,7 +47,7 @@ class MyTrain():
                 # 输入进行图象变换 (N,H,W,C) -> (N,C,H,W)
                 x=x.permute(0,3,1,2).to(self.device)
                 # output=self.myNet(x).to(self.device)
-                output=self.ResNet(x).to(self.device)
+                output=self.vggNet(x).to(self.device)
                 y=y.to(self.device)
                 loss=self.lossFun(y,output)
                 losslst.append(loss)
@@ -92,11 +92,11 @@ class MyTrain():
 
 
         # 保存加载模型所有信息
-        # torch.save(self.myNet, r'model/model.pth')  
+        torch.save(self.vggNet, r'models/model.pth')
         # model = torch.load(r'model/model.pth')
 
         # 保存加载模型参数信息
-        torch.save(self.ResNet.state_dict(), r'models/params.pth')  
+        # torch.save(self.ResNet.state_dict(), r'models/params.pth')  
         # model_object.load_state_dict(torch.load(r'model/params.pth'))
     
     def changeLogoChannel(self):

@@ -41,9 +41,6 @@ class BasicBlock(nn.Module):
 
         return out
 
-
-
-
 class ResNet(nn.Module):
 
     def __init__(self, block, layers, num_classes, grayscale):
@@ -57,19 +54,21 @@ class ResNet(nn.Module):
         else:
             in_dim = 3
         super().__init__()
-        self.conv1 = nn.Conv2d(in_dim, 64, kernel_size=7, stride=2, padding=3,
-                               bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.layer0=nn.Sequential(
+                nn.Conv2d(in_dim, 64, kernel_size=7, stride=2, padding=3,
+                               bias=False),
+                nn.BatchNorm2d(64),
+                nn.ReLU(inplace=True),
+                nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
-        self.avgpool = nn.AvgPool2d(7, stride=1)
-        # self.fc = nn.Linear(512 * block.expansion, num_classes)
-        self.fc = nn.Linear(512 * 16, num_classes)
-
+        self.layer5=nn.Sequential(
+                # nn.AvgPool2d(7, stride=1),
+                nn.Linear(512 * 16, num_classes)
+        )
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -98,10 +97,7 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
+        x = self.layer0(x)
 
         x = self.layer1(x)
         x = self.layer2(x)
@@ -113,7 +109,7 @@ class ResNet(nn.Module):
         
         x = x.view(x.size(0), -1)
         # logits = self.fc(x)
-        result = self.fc(x)
+        result = self.layer5(x)
         # probas = F.softmax(logits, dim=1)
         # return logits, probas
         return result
@@ -130,6 +126,30 @@ def resnet18(num_classes):
     """Constructs a ResNet-18 model."""
     model = ResNet(block=BasicBlock, 
                    layers=[2, 2, 2, 2],
+                   num_classes=4,
+                   grayscale=None)
+    return model
+
+def resnet50(num_classes):
+    """Constructs a ResNet-50 model."""
+    model = ResNet(block=BasicBlock, 
+                   layers=[3, 4, 6, 3],
+                   num_classes=4,
+                   grayscale=None)
+    return model
+
+def resnet101(num_classes):
+    """Constructs a ResNet-101 model."""
+    model = ResNet(block=BasicBlock, 
+                   layers=[3, 4, 23, 3],
+                   num_classes=4,
+                   grayscale=None)
+    return model
+
+def resnet152(num_classes):
+    """Constructs a ResNet-152 model."""
+    model = ResNet(block=BasicBlock, 
+                   layers=[3, 8, 36, 3],
                    num_classes=4,
                    grayscale=None)
     return model

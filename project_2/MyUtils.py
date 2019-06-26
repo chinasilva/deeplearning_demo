@@ -33,7 +33,9 @@ class MyUtils():
         return target
 
     def deviceFun(self):
-        device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        # device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        #使用cpu训练
+        device=torch.device("cpu")
         print(device)
         return device
 
