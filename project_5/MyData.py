@@ -11,9 +11,11 @@ class MyData(data.Dataset):
         self.dataset=[]
         # 以列表形式链接所有地址
         self.dataset.extend(os.listdir(path))
-
         tagPath=r"C:/Users/liev/Desktop/dataset/celeba/Anno/list_bbox_celeba.txt"
-        self.processImage=ProcessImage(tagPath)
+        tagWritePath=r"C:\Users\liev\Desktop\code\deeplearning_homework\project_5\pic\12\negative\12_list_bbox_celeba.txt"
+        saveImgPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\pic\12\negative'
+        #处理图片
+        self.process=ProcessImage(tagPath,tagWritePath,saveImgPath)
     
     # 获取数据长度
     def __len__(self):
@@ -22,9 +24,7 @@ class MyData(data.Dataset):
     # 获取数据中x,y
     def __getitem__(self, index):
         imgName=self.dataset[index]
-        
-        self.processImage.processImage(self.path,imgName)
-
+        self.process.processImage(self.path,imgName)
         return imgName
 
 
