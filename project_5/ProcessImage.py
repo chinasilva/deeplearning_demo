@@ -10,7 +10,7 @@ class ProcessImage():
         self.saveImgPath=saveImgPath
         self.newTagLst=newTagLst
 
-    def processImage(self,imagePath,imgName,outImgSize=12):
+    def processImage(self,imagePath,imgName,outImgSize=[12]):
         '''
         逐张处理图片
         outImgSize:默认处理尺寸为12
@@ -23,14 +23,15 @@ class ProcessImage():
                 for line in tagLst:
                     if imgName in line:
                         imageInfo = line.split()#将单个数据分隔开存好
-                        #resize 图片 
-                        targetSize=(outImgSize,outImgSize)
-                        offset=self.padImage2(img,imgName,imageInfo, targetSize,self.saveImgPath)
-                        self.newTagLst.append(offset)
-                        if len(self.newTagLst)%100==0: # 每1000次写一次
-                            self.writeTag(self.tagWritePath,self.newTagLst)
-                            self.newTagLst=[]
-                        return imageInfo,self.newTagLst
+                        for imgSize in outImgSize: # 处理多组数据
+                            #resize 图片 
+                            targetSize=(imgSize,imgSize)
+                            offset=self.padImage2(img,imgName,imageInfo, targetSize,self.saveImgPath)
+                            self.newTagLst.append(offset)
+                            if len(self.newTagLst)%100==0: # 每1000次写一次
+                                self.writeTag(self.tagWritePath,self.newTagLst)
+                                self.newTagLst=[]
+                            return imageInfo,self.newTagLst
         except:
             print("ERROR:",imgName)
 
@@ -95,7 +96,7 @@ class ProcessImage():
         1.按比例缩放并填充，先缩放后填充
         2.进行记录标签要更改的偏移量
         '''
-        x1=float(imageInfo[1]) 
+        x1=float(imageInfo[1])
         y1=float(imageInfo[2])
         width=float(imageInfo[3])
         height=float(imageInfo[4])
@@ -117,7 +118,42 @@ class ProcessImage():
 
         #进行缩放
         newImage = newImage.resize((w, h), Image.BICUBIC)  # 缩小图像
-        newImgName=os.path.join(savePath,'12new-'+imgName)
+        newImgName=os.path.join(savePath,imgName)
+        newImage.save(newImgName)
+        offset=(imgName,offsetX1,offsetY1,offsetX2,offsetY2)
+        return offset
+
+    def offsetImage(self, image,imgName,imageInfo, targetSize,savePath):
+        '''
+        1.按比例缩放并填充，先缩放后填充
+        2.进行记录标签要更改的偏移量
+        '''
+        x1=float(imageInfo[1])
+        y1=float(imageInfo[2])
+        width=float(imageInfo[3])
+        height=float(imageInfo[4])
+        
+        box=(x1,y1,width,height)
+        image=image.crop(box)
+
+        iw, ih = image.size  # 原始图像的尺寸
+        w, h = targetSize  # 目标图像的尺寸
+        maxValue= max(iw, ih)
+        paddingW=(maxValue-iw)//2
+        paddingH=(maxValue-ih)//2
+        # 先填充,后resize
+        newImage = Image.new('RGB', (maxValue,maxValue), (255,255,255))
+        newImage.paste(image, (paddingW,paddingH))  # 将图像填充为中间图像，两侧为灰色的样式
+        
+        #求出偏移量，并且对偏移量进行放缩，默认目标图w=h
+        offsetX1= round( (x1+paddingW)/w, 2)
+        offsetY1= round((y1+paddingH)/w,2)
+        offsetX2= round(((x1+width)-iw+paddingW)/w,2)
+        offsetY2= round(((y1+height)-ih+paddingH)/w,2)
+
+        #进行缩放
+        newImage = newImage.resize((w, h), Image.BICUBIC)  # 缩小图像
+        newImgName=os.path.join(savePath,imgName)
         newImage.save(newImgName)
         offset=(imgName,offsetX1,offsetY1,offsetX2,offsetY2)
         return offset

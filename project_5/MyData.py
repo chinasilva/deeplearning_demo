@@ -15,10 +15,11 @@ class MyData(data.Dataset):
         # 以列表形式链接所有地址
         self.dataset.extend(os.listdir(path))
         self.tagPath=r"C:/Users/liev/Desktop/dataset/celeba/Anno/list_bbox_celeba.txt"
-        tagWritePath=r"C:\Users\liev\Desktop\code\deeplearning_homework\project_5\pic\12\negative\12_list_bbox_celeba.txt"
+        tagWritePath=r"C:\Users\liev\Desktop\code\deeplearning_homework\project_5\pic\12\negative\list_bbox_celeba.txt"
         saveImgPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\pic\12\negative'
         #处理图片
         self.tagLst=[]
+        
         self.process=ProcessImage(self.tagPath,tagWritePath,saveImgPath,self.tagLst)
     
     # 获取数据长度
@@ -28,14 +29,15 @@ class MyData(data.Dataset):
     # 获取数据中x,y
     def __getitem__(self, index):
         imgName=self.dataset[index]
-        imageInfo,tagLst= self.process.processImage(self.path,imgName)
+        lst=[12,24,48]
+        imageInfo,tagLst= self.process.processImage(self.path,imgName,outImgSize=lst)
         return imgName,tagLst
 
 
 if __name__ == "__main__":
     imagePath=r'C:/Users/liev/Desktop/dataset/celeba/img_celeba/'
     myData=MyData(imagePath)
-    trainData=data.DataLoader(myData,batch_size=5,shuffle=False)
+    trainData=data.DataLoader(myData,batch_size=1,shuffle=False)
     for i,(imgName,tagLst) in enumerate(trainData):
         print(i)
         # a=datetime.now()
