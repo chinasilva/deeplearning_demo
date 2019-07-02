@@ -9,8 +9,8 @@ from MyEnum import MyEnum
 
 class ProcessImage():
     def __init__(self,imagePath,tagPath,saveImgPath,saveTagPath):
-        # self.sizeLst=[12,24,48]
-        self.sizeLst=[12,24]
+        self.sizeLst=[48,12,24]
+        # self.sizeLst=[12,24]
         self.tagPath=tagPath
         self.saveTagPath=saveTagPath
         self.saveImgPath=saveImgPath
@@ -90,14 +90,63 @@ class ProcessImage():
         except Exception as e:
             print("ERROR:","main"+str(e))
 
+    def negetiveMain(self):
+        try:
+            newImgNameLst=['0a','0b','0c','0d','0e']
+            # 根据生成图片及标签尺寸进行循环
+            for size in self.sizeLst:
+                dataset=[]
+                dataset.extend(os.listdir(self.imagePath))
+                #根据所读的每个图片名称进行遍历
+                for i,imgName in enumerate(dataset) :
+                    j=0
+                    if i<1423:
+                        continue
+                    with Image.open(os.path.join(imagePath,imgName)).convert('RGB') as img:
+                        w,h=img.size
+                        centX=w/2
+                        centY=h/2
+                        while j<30:
+                            newTagLst=[]
+                            movePosition1=random.uniform(-0.1, 0.1) * min(w,h)
+                            movePosition2=random.uniform(-0.1, 0.1) * min(w,h)
+                            rand=random.uniform(0.8, 1.2)
+                            side=random.uniform(rand * min(w,h), rand* max(w,h)) 
+                            #新图形中心点坐标
+                            newCentX=centX+movePosition1
+                            newCentY=centY+movePosition2
+                            newImgLeftTopX=newCentX-side/2
+                            newImgLeftTopY=newCentY-side/2
+                            newImgRightBottomX=newCentX+side/2
+                            newImgRightBottomY=newCentY+side/2
+                            newImgName=newImgNameLst[j//6]+str(j)+imgName
+                            offset=(newImgName,MyEnum.negative.value,0,0,0,0)
+                            newImgPosition=(newImgLeftTopX,newImgLeftTopY,newImgRightBottomX,newImgRightBottomY)
+                            img1=img.crop(newImgPosition)
+                            img1=img1.resize((size,size))
+                            savePath=saveImgPath+"/"+str(size)+"/"+'negative'
+                            if  not os.path.exists(savePath):
+                                os.makedirs(savePath)
+                            savePath=savePath+"/"+newImgName
+                            img1.save(savePath)
+                            newTagLst.append(offset)
+                            saveTagPath2=saveTagPath+"/"+str(size)+'list_bbox_celeba.txt'
+                            writeTag(saveTagPath2,newTagLst)
+                            j=j+1
+                            print("第{}轮，第{}次".format(i,j))
+            print("Done...............",size)
+        except Exception as e:
+            print("ERROR:","main"+str(e))
 
 if __name__ == "__main__":
-    imagePath='F:/deeplearning/datasets/celeba/img_celeba/'
+    # imagePath='F:/deeplearning/datasets/celeba/img_celeba/'
+    imagePath='D:/pic/'
     tagPath="F:/deeplearning/datasets/celeba/Anno/list_bbox_celeba.txt"
 
-    saveImgPath='C:/Users/liev/Desktop/code/deeplearning_homework/project_5/pic'
-    saveTagPath="C:/Users/liev/Desktop/code/deeplearning_homework/project_5/txt/"
+    saveImgPath='D:/my_celebea/negative'
+    saveTagPath="D:/my_celebea/negative"
     process=ProcessImage(imagePath,tagPath,saveImgPath,saveTagPath)
-    process.main()
+    # process.main()
+    process.negetiveMain()
 
 
