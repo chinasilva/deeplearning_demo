@@ -32,7 +32,7 @@ class RNet(nn.Module):
             nn.Conv2d(in_channels=48,out_channels=64,kernel_size=2),
         )
         self.line=nn.Linear(in_features=1000,out_features=128)
-        self.classification=nn.Linear(in_features=128,out_features=2)
+        self.classification=nn.Linear(in_features=128,out_features=1)
         self.boundingbox=nn.Linear(in_features=128,out_features=4)
         self.landmark=nn.Linear(in_features=128,out_features=10)
 
@@ -75,3 +75,10 @@ class ONet(nn.Module):
         boundingbox=self.boundingbox(y)
         landmark=self.landmark(y)
         return classification,boundingbox,landmark
+
+
+if __name__ == "__main__":
+    a=torch.Tensor(2,3,100,100)
+    p=PNet()
+    out=p(a)
+    print(out)
