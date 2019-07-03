@@ -14,9 +14,9 @@ keyword = input("请输入搜索关键字：")
 keyword = urllib.parse.quote(keyword,'utf-8')
 
 n = 0
-j = 0
+j = 12000
 
-while(n<3000):
+while(n<300000):
     error = 0
     n+=30
     #url
@@ -39,8 +39,8 @@ while(n<3000):
     p = re.compile("thumbURL.*?\.jpg")
     #获取正则匹配到的结果，返回list
     s = p.findall(html)
-    if os.path.isdir("D://pic") != True:
-        os.makedirs("D://pic")
+    if os.path.isdir("D://pic2") != True:
+        os.makedirs("D://pic2")
     with open("testpic.txt","a") as f:
         #获取图片
         for i in s:

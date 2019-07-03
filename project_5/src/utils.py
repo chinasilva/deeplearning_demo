@@ -291,55 +291,60 @@ def offsetImage(self, image,imgName,imageInfo, targetSize,savePath):
     return offset
 
 if __name__ == "__main__":
+    box=[]
+    box1=(1,2,3,4,0)
+    box2=(2,3,4,5,1)
+    box.append(box1)
+    box.append(box2)
+    nms(box)
+    # # 创建图象坐标点
+    # image0_x=np.array((0,0))
+    # image0_y=np.array((5,5))
+    # image1_x=np.array((3,3))
+    # image1_y=np.array((10,10))
+    # image2_x=np.array((8,8))
+    # image2_y=np.array((13,13))
+    # image3_x=np.array((15,15))
+    # image3_y=np.array((30,30))
+    # image4_x=np.array((45,45))
+    # image4_y=np.array((66,66))
+    # image5_x=np.array((33,33))
+    # image5_y=np.array((77,77))
+    # image0=(image0_x,image0_y,0.7)
+    # image1=(image1_x,image1_y,0.8)
+    # image2=(image2_x,image2_y,0.65)
+    # image3=(image3_x,image3_y,0.8)
+    # image4=(image4_x,image4_y,0.6)
+    # image5=(image5_x,image5_y,0.7)
+    # # 创建图片
+    # imgName="rectangle.png"
+    # img=createImage(imgName)
+    # #进行画图
+    # pltFun(image0,img,imgName)
+    # pltFun(image1,img,imgName)
+    # pltFun(image2,img,imgName)
+    # pltFun(image3,img,imgName)
+    # pltFun(image4,img,imgName)
+    # pltFun(image5,img,imgName)
 
-    # 创建图象坐标点
-    image0_x=np.array((0,0))
-    image0_y=np.array((5,5))
-    image1_x=np.array((3,3))
-    image1_y=np.array((10,10))
-    image2_x=np.array((8,8))
-    image2_y=np.array((13,13))
-    image3_x=np.array((15,15))
-    image3_y=np.array((30,30))
-    image4_x=np.array((45,45))
-    image4_y=np.array((66,66))
-    image5_x=np.array((33,33))
-    image5_y=np.array((77,77))
-    image0=(image0_x,image0_y,0.7)
-    image1=(image1_x,image1_y,0.8)
-    image2=(image2_x,image2_y,0.65)
-    image3=(image3_x,image3_y,0.8)
-    image4=(image4_x,image4_y,0.6)
-    image5=(image5_x,image5_y,0.7)
-    # 创建图片
-    imgName="rectangle.png"
-    img=createImage(imgName)
-    #进行画图
-    pltFun(image0,img,imgName)
-    pltFun(image1,img,imgName)
-    pltFun(image2,img,imgName)
-    pltFun(image3,img,imgName)
-    pltFun(image4,img,imgName)
-    pltFun(image5,img,imgName)
+    # #显示图片
+    # pil_im = Image.open(imgName, 'r')
+    # imshow(np.asarray(pil_im))
+    # plt.show()
 
-    #显示图片
-    pil_im = Image.open(imgName, 'r')
-    imshow(np.asarray(pil_im))
-    plt.show()
+    # #计算IOU
+    # print("IOU:",iouFun(image0,image1))
+    # print("IOU3:",iouFun(image0,image5))
 
-    #计算IOU
-    print("IOU:",iouFun(image0,image1))
-    print("IOU3:",iouFun(image0,image5))
-
-    # 创建图片
-    imgName2="rectangle2.png"
-    img2=createImage(imgName2)
-    res=nmsFun(0.8,image0,image1,image2,image3,image4,image5)
-    #进行画图
-    for i in range(len(res)):
-        image0=(res[i][0],res[i][1],res[i][2])
-        pltFun(image0,img2,imgName2)
-    #显示图片
-    pil_im2 = Image.open(imgName2, 'r')
-    imshow(np.asarray(pil_im2))
-    plt.show()
+    # # 创建图片
+    # imgName2="rectangle2.png"
+    # img2=createImage(imgName2)
+    # res=nmsFun(0.8,image0,image1,image2,image3,image4,image5)
+    # #进行画图
+    # for i in range(len(res)):
+    #     image0=(res[i][0],res[i][1],res[i][2])
+    #     pltFun(image0,img2,imgName2)
+    # #显示图片
+    # pil_im2 = Image.open(imgName2, 'r')
+    # imshow(np.asarray(pil_im2))
+    # plt.show()
