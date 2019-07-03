@@ -37,7 +37,7 @@ class MyTrain():
         
 
     def train(self):
-        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True)
+        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,drop_last=True,num_workers=4)
         losslst=[]
         for i in range(self.epoch):
             print("epoch:",i)
@@ -51,14 +51,14 @@ class MyTrain():
                 index=offset[:,0]!=MyEnum.part.value # 过滤部分人脸样本，进行比较
                 target1=offset[index] 
                 target1=target1[:,:1] #取第0位,置信度
-                output1=outputClass[index]
+                output1=outputClass[index].reshape(-1,1)
                 output1=output1[:,:1] #取第0位,置信度
                 loss1=self.lossFun1(output1.to(self.device),target1.to(self.device))
 
                 index2=offset[:,0]!=MyEnum.negative.value # 过滤非人脸样本，进行比较
                 target2=offset[index2] 
                 target2=target2[:,1:5] #取第1-4位,偏移量
-                output2=outputBox[index2]
+                output2=outputBox[index2].reshape(-1,4)
                 output2=output2[:,:5]
                 loss2=self.lossFun2(target2.to(self.device),output2.to(self.device))
                 
@@ -69,17 +69,17 @@ class MyTrain():
                 self.optimizer.step()
 
                 
-                if j%10==0:  #每10批次打印loss
-                    b=datetime.now()
-                    c=(b-a).microseconds//1000
-                    print("epoch:{}, loss1:{},loss2:{},loss:{},用时{}ms".format(i,loss1.data,loss2.data,loss.data,c))
-                    torch.save(self.net,self.fileLoction)
+                # if j%10==0:  #每10批次打印loss
+                b=datetime.now()
+                c=(b-a).microseconds//1000
+                print("epoch:{}, loss1:{},loss2:{},loss:{},用时{}ms".format(i,loss1.data,loss2.data,loss.data,c))
+                torch.save(self.net,self.fileLoction)
 
     
 if __name__ == "__main__":
-    imgPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\pic\48'
-    tagPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\txt\48list_bbox_celeba.txt'
-    myTrain=MyTrain(Net='ONet',epoch=10,batchSize=512,imgPath=imgPath,tagPath=tagPath)
+    imgPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\test\12'
+    tagPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\test\12list_bbox_celeba.txt'
+    myTrain=MyTrain(Net='PNet',epoch=1,batchSize=3,imgPath=imgPath,tagPath=tagPath)
     myTrain.train()
 
     

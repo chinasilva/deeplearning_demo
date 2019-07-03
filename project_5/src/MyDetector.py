@@ -1,38 +1,43 @@
 import torch
 import torch.nn
+import numpy as np
+import os
+from PIL import Image,ImageDraw
+from matplotlib.pyplot import imshow
+import matplotlib.pyplot as plt
+from utils import nms,createImage,pltFun
 import MyTrain
 import MyNet
-from utils import nms,createImage
 
 class MyDetector():
-    def __init__(self):
-        self.pnet=MyNet.PNet()
-        self.rnet=MyNet.RNet()
-        self.onet=MyNet.ONet()
+    def __init__(self,testImagePath,netPath):
+        self.pnet=torch.load(netPath+'\PNet.pth')
+        self.rnet=torch.load(netPath+'\RNet.pth')
+        self.onet=torch.load(netPath+'\ONet.pth')
+        self.testImagePath=testImagePath
         self.pnetSize=12
         self.rnetSize=24
         self.OnetSize=48
 
     def main(self):
-        img=torch.Tensor(2,3,200,100)
-        PLst=self.pnetDetector(img)
-        RLst=self.rnetDetector(PLst)
-        OLst=self.onetDetector(RLst)
-        # 创建图片
-        imgName="rectangle.png"
-        img=createImage(imgName)
-        #进行画图
-        pltFun(image0,img,imgName)
-        pltFun(image1,img,imgName)
-        pltFun(image2,img,imgName)
-        pltFun(image3,img,imgName)
-        pltFun(image4,img,imgName)
-        pltFun(image5,img,imgName)
-
-        #显示图片
-        pil_im = Image.open(imgName, 'r')
-        imshow(np.asarray(pil_im))
-        plt.show()
+        dataset=[]
+        dataset.extend(os.listdir(self.testImagePath))
+        for i,imgName in enumerate(dataset) :
+            with Image.open(os.path.join(self.testImagePath,imgName)).convert('RGB') as img:
+                # img=torch.Tensor(2,3,200,100)
+                PLst=self.pnetDetector(img)
+                RLst=self.rnetDetector(PLst)
+                OLst=self.onetDetector(RLst)
+                for out in OLst:
+                    x1=out[0]
+                    y1=out[1]
+                    x2=out[2]
+                    y2=out[3]
+                    image0=((x1,y1),(x2,y2))
+                    #进行画图
+                    pltFun(image0,img,imgName)
+                #显示图片
+                plt.show()
 
     def pnetDetector(self,img):
         PLst=[] #从PNet返回找到人脸的框
