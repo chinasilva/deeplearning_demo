@@ -9,8 +9,8 @@ from MyEnum import MyEnum
 
 class ProcessImage():
     def __init__(self,imagePath,tagPath,saveImgPath,saveTagPath):
-        self.sizeLst=[48,12,24]
-        # self.sizeLst=[12,24]
+        # self.sizeLst=[48,12,24]
+        self.sizeLst=[24]
         self.tagPath=tagPath
         self.saveTagPath=saveTagPath
         self.saveImgPath=saveImgPath
@@ -106,34 +106,22 @@ class ProcessImage():
                         w,h=img.size
                         centX=w/2
                         centY=h/2
+                        newTagLst=[]
                         while j<30:
-                            newTagLst=[]
-                            movePosition1=random.uniform(-0.1, 0.1) * min(w,h)
-                            movePosition2=random.uniform(-0.1, 0.1) * min(w,h)
-                            rand=random.uniform(0.8, 1.2)
-                            side=random.uniform(rand * min(w,h), rand* max(w,h)) 
-                            #新图形中心点坐标
-                            newCentX=centX+movePosition1
-                            newCentY=centY+movePosition2
-                            newImgLeftTopX=newCentX-side/2
-                            newImgLeftTopY=newCentY-side/2
-                            newImgRightBottomX=newCentX+side/2
-                            newImgRightBottomY=newCentY+side/2
                             newImgName=newImgNameLst[j//6]+str(j)+imgName
-                            offset=(newImgName,MyEnum.negative.value,0,0,0,0)
-                            newImgPosition=(newImgLeftTopX,newImgLeftTopY,newImgRightBottomX,newImgRightBottomY)
-                            img1=img.crop(newImgPosition)
-                            img1=img1.resize((size,size))
+                            img1=img.resize((size,size))
                             savePath=saveImgPath+"/"+str(size)+"/"+'negative'
                             if  not os.path.exists(savePath):
                                 os.makedirs(savePath)
                             savePath=savePath+"/"+newImgName
                             img1.save(savePath)
+                            offset=(newImgName,MyEnum.negative.value,0,0,0,0)
                             newTagLst.append(offset)
                             saveTagPath2=saveTagPath+"/"+str(size)+'list_bbox_celeba.txt'
-                            writeTag(saveTagPath2,newTagLst)
                             j=j+1
                             print("第{}轮，第{}次".format(i,j))
+                        writeTag(saveTagPath2,newTagLst)
+                            
             print("Done...............",size)
         except Exception as e:
             print("ERROR:","main"+str(e))

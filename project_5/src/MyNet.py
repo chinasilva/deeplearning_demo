@@ -5,21 +5,27 @@ class PNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.PNet= nn.Sequential(
-            nn.Conv2d(in_channels=3,out_channels=10,kernel_size=3,stride=1),
+            nn.Conv2d(in_channels=3,out_channels=10,kernel_size=3,padding=1),
+            nn.PReLU(),
             nn.MaxPool2d(kernel_size=3,stride=2),
-            nn.Conv2d(in_channels=5,out_channels=16,kernel_size=3),
-            nn.Conv2d(in_channels=16,out_channels=32,kernel_size=1),
+            nn.Conv2d(in_channels=10,out_channels=16,kernel_size=3),
+            nn.PReLU(),
+            nn.Conv2d(in_channels=16,out_channels=32,kernel_size=3),
+            nn.PReLU()
+            # nn.Conv2d(in_channels=32,out_channels=32,kernel_size=1),
         )
-        self.classification=nn.Conv2d(in_channels=32,out_channels=2,kernel_size=1)
+        self.outputClass=nn.Conv2d(in_channels=32,out_channels=1,kernel_size=1)
+        self.sigmod=nn.Sigmoid()
         self.boundingbox=nn.Conv2d(in_channels=32,out_channels=4,kernel_size=1)
         self.landmark=nn.Conv2d(in_channels=32,out_channels=10,kernel_size=1)
 
     def forward(self,input):
         y= self.PNet(input)
-        classification=self.classification(y)
+        outputClass=self.outputClass(y)
+        outputClass=self.sigmod(outputClass)
         boundingbox=self.boundingbox(y)
         landmark=self.landmark(y)
-        return classification,boundingbox,landmark
+        return outputClass,boundingbox,landmark
 
 class RNet(nn.Module):
     def __init__(self):
@@ -31,14 +37,17 @@ class RNet(nn.Module):
             nn.MaxPool2d(kernel_size=3,stride=2),
             nn.Conv2d(in_channels=48,out_channels=64,kernel_size=2),
         )
-        self.line=nn.Linear(in_features=1000,out_features=128)
+        self.line=nn.Linear(in_features=256,out_features=128)
+        self.sigmod=nn.Sigmoid()
         self.classification=nn.Linear(in_features=128,out_features=1)
         self.boundingbox=nn.Linear(in_features=128,out_features=4)
         self.landmark=nn.Linear(in_features=128,out_features=10)
 
     def forward(self,input):
         y= self.RNet(input)
+        y=y.view(-1,256)
         y=self.line(y)
+        y=self.sigmod(y)
         classification=self.classification(y)
         boundingbox=self.boundingbox(y)
         landmark=self.landmark(y)
@@ -78,7 +87,10 @@ class ONet(nn.Module):
 
 
 if __name__ == "__main__":
-    a=torch.Tensor(2,3,100,100)
+    # test=torch.Tensor(2,3,24,24)
+    test=torch.Tensor(2,3,100,100)
+    # print(a)
     p=PNet()
-    out=p(a)
-    print(out)
+    # p=RNet()
+    a,b,c=p(test)
+    print(a)
