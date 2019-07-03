@@ -2,7 +2,8 @@
 *.png
 *.rar
 *.pyc
+*.txt
+*.pth
 
-! project_2/logo.jpg
 
 
