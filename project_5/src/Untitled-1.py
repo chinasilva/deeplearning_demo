@@ -8,13 +8,16 @@ import numpy as np
 
 from MyNet import PNet,RNet,ONet
 from utils import nms,createImage,pltFun,deviceFun
-test= torch.Tensor(3,3,100,100)
-test2= torch.Tensor(3,3,100,100)
-lst=[test,test2,test2]
-print(torch.stack(lst,dim=4).size())
 
-# a= torch.range(1,8)
-# a=a.reshape(2,1,2,2)
+# test= torch.Tensor(3,3,100,100)
+# test2= torch.Tensor(3,3,100,100)
+# lst=[test,test2,test2]
+# print(torch.stack(lst,dim=4).size())
+
+a= torch.range(1,10)
+a=a.reshape(2,5)
+
+print(a[1]-a[0])
 # b=a[:,:1]
 # print("---",b) 
 # # net=PNet()

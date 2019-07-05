@@ -231,20 +231,19 @@ def convertToPosition(originPosition):
     '''
     根据原图坐标进行最短边补齐
     '''
+    newImg=originPosition.copy()
     if len(originPosition) == 0:
         return []
-    originImgW=np.int16(originPosition[:,2]-originPosition[:,0]).reshape(-1,1)
-    originImgH=np.int16(originPosition[:,3]-originPosition[:,1]).reshape(-1,1)
-    minSide=np.where((originImgW-originImgH)>0,originImgH,originImgW) #获取最短边 min(,originImgH)
-    maxSide=np.where((originImgW-originImgH)>0,originImgW,originImgH) #获取最长边max(originImgW,originImgH)
+    originImgW=np.int16(originPosition[:,2]-originPosition[:,0])
+    originImgH=np.int16(originPosition[:,3]-originPosition[:,1])
+    maxSide=np.maximum(originImgW,originImgH) #获取最长边max(originImgW,originImgH)
     #按照最长边进行抠图，短边进行补全
-    originImgPostionX1=originPosition[:,0].reshape(-1,1)-(maxSide-originImgW)//2
-    originImgPostionY1=originPosition[:,1].reshape(-1,1)-(originImgH-minSide)//2
-    originImgPostionX2=(maxSide-originImgW)//2+originPosition[:,2].reshape(-1,1)
-    originImgPostionY2=(originImgH-minSide)//2+originPosition[:,3].reshape(-1,1)
-    confidence=originPosition[:,4].reshape(-1,1)
-    imgInfo=np.concatenate((originImgPostionX1,originImgPostionY1,originImgPostionX2,originImgPostionY2,confidence),axis=1)
-    return imgInfo
+    newImg[:,0]=originPosition[:,0]+originImgW*0.5-maxSide*0.5
+    newImg[:,1]=originPosition[:,1]+originImgH*0.5-maxSide*0.5
+    newImg[:,2]=originPosition[:,2]+maxSide # *0.5-originImgW*0.5
+    newImg[:,3]=originPosition[:,3]+maxSide # *0.5-originImgH*0.5
+    newImg[:,4]=originPosition[:,4]
+    return newImg
 
 # 求出当前坐标,并还原到原图上去
 def backoriginImg(start_index, offset, cls, scale, stride=2, side_len=12):
@@ -258,14 +257,10 @@ def backoriginImg(start_index, offset, cls, scale, stride=2, side_len=12):
         oh = _y2 - _y1
 
         _offset = offset[:, start_index[0], start_index[1]]
-        x1 = (_x1 - ow * _offset[0]).int()
-        y1 = _y1 - oh * _offset[1].int()
-        x2 = _x2 - ow * _offset[2].int()
-        y2 = _y2 - oh * _offset[3].int()
-        # x1 = _x1 + ow * _offset[0].int()
-        # y1 = _y1 + oh * _offset[1].int()
-        # x2 = _x2 + ow * _offset[2].int()
-        # y2 = _y2 + oh * _offset[3].int()
+        x1 = _x1 + ow * _offset[0].int()
+        y1 = _y1 + oh * _offset[1].int()
+        x2 = _x2 + ow * _offset[2].int()
+        y2 = _y2 + oh * _offset[3].int()
 
         return [x1, y1, x2, y2, cls]
 
