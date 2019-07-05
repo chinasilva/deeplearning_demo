@@ -75,6 +75,7 @@ def writeTag(path,tagLst):
             newImgName,flag,x1,x2,y1,y2=tag
             f.write(str.format("{0}  {1}  {2}  {3}  {4} {5}",newImgName,flag,x1,x2,y1,y2))
             f.write('\n')
+
 def processImage(newImgName,imgName,imagePath,saveImgPath,imgPath2,saveTagPath,offset,newImgPosition, outImgSize=12):
     '''
     逐张处理图片
@@ -178,12 +179,95 @@ def nms(boxes, overlap_threshold=0.5, mode='union'):
 
     return pick
 
+#liewei-nms
+def nms2(boxes, thresh=0.3, isMin = False):
 
+    if boxes.shape[0] == 0:
+        return np.array([])
+
+    _boxes = boxes[(-boxes[:, 4]).argsort()]
+    r_boxes = []
+
+    while _boxes.shape[0] > 1:
+        a_box = _boxes[0]
+        b_boxes = _boxes[1:]
+
+        r_boxes.append(a_box)
+
+        # print(iou(a_box, b_boxes))
+
+        index = np.where(iou(a_box, b_boxes,isMin) < thresh)
+        _boxes = b_boxes[index]
+
+    if _boxes.shape[0] > 0:
+        r_boxes.append(_boxes[0])
+
+    return np.stack(r_boxes)
+def iou(box, boxes, isMin = False):
+    box_area = (box[2] - box[0]) * (box[3] - box[1])
+    area = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    xx1 = np.maximum(box[0], boxes[:, 0])
+    yy1 = np.maximum(box[1], boxes[:, 1])
+    xx2 = np.minimum(box[2], boxes[:, 2])
+    yy2 = np.minimum(box[3], boxes[:, 3])
+
+    w = np.maximum(0, xx2 - xx1)
+    h = np.maximum(0, yy2 - yy1)
+
+    inter = w * h
+    if isMin:
+        ovr = np.true_divide(inter, np.minimum(box_area, area))
+    else:
+        ovr = np.true_divide(inter, (box_area + area - inter))
+
+    return ovr
+    
 def deviceFun():
     device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
     return device
 
+def convertToPosition(originPosition):
+    '''
+    根据原图坐标进行最短边补齐
+    '''
+    if len(originPosition) == 0:
+        return []
+    originImgW=np.int16(originPosition[:,2]-originPosition[:,0]).reshape(-1,1)
+    originImgH=np.int16(originPosition[:,3]-originPosition[:,1]).reshape(-1,1)
+    minSide=np.where((originImgW-originImgH)>0,originImgH,originImgW) #获取最短边 min(,originImgH)
+    maxSide=np.where((originImgW-originImgH)>0,originImgW,originImgH) #获取最长边max(originImgW,originImgH)
+    #按照最长边进行抠图，短边进行补全
+    originImgPostionX1=originPosition[:,0].reshape(-1,1)-(maxSide-originImgW)//2
+    originImgPostionY1=originPosition[:,1].reshape(-1,1)-(originImgH-minSide)//2
+    originImgPostionX2=(maxSide-originImgW)//2+originPosition[:,2].reshape(-1,1)
+    originImgPostionY2=(originImgH-minSide)//2+originPosition[:,3].reshape(-1,1)
+    confidence=originPosition[:,4].reshape(-1,1)
+    imgInfo=np.concatenate((originImgPostionX1,originImgPostionY1,originImgPostionX2,originImgPostionY2,confidence),axis=1)
+    return imgInfo
+
+# 求出当前坐标,并还原到原图上去
+def backoriginImg(start_index, offset, cls, scale, stride=2, side_len=12):
+
+        _x1 = (start_index[1] * stride).float() / scale
+        _y1 = (start_index[0] * stride).float() / scale
+        _x2 = (start_index[1] * stride + side_len).float() / scale
+        _y2 = (start_index[0] * stride + side_len).float() / scale
+
+        ow = _x2 - _x1
+        oh = _y2 - _y1
+
+        _offset = offset[:, start_index[0], start_index[1]]
+        x1 = (_x1 - ow * _offset[0]).int()
+        y1 = _y1 - oh * _offset[1].int()
+        x2 = _x2 - ow * _offset[2].int()
+        y2 = _y2 - oh * _offset[3].int()
+        # x1 = _x1 + ow * _offset[0].int()
+        # y1 = _y1 + oh * _offset[1].int()
+        # x2 = _x2 + ow * _offset[2].int()
+        # y2 = _y2 + oh * _offset[3].int()
+
+        return [x1, y1, x2, y2, cls]
 
 def myRectangle(self,imageInfo,img,imgName):
     '''
