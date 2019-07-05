@@ -1,4 +1,4 @@
-import torch
+﻿import torch
 import torch.nn as nn
 import numpy as np
 from torch.utils import data
@@ -29,15 +29,16 @@ class MyTrain():
         self.batchSize=batchSize
         self.epoch=epoch
         self.myData=MyData(tagPath,imgPath)
-        self.lossFun1=nn.BCEWithLogitsLoss()
+        # self.lossFun1=nn.BCEWithLogitsLoss()
+        self.lossFun1=nn.BCELoss()
         self.lossFun2=nn.MSELoss()
         if os.path.exists(self.fileLoction):
             self.net=torch.load(self.fileLoction)
         self.optimizer=torch.optim.Adam(self.net.parameters())
         
-
     def train(self):
         trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,drop_last=True,num_workers=4)
+        # trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=False,drop_last=True)
         losslst=[]
         for i in range(self.epoch):
             print("epoch:",i)
@@ -78,12 +79,10 @@ class MyTrain():
             except Exception as e:
                 print("train",str(e))
   
-
-    
 if __name__ == "__main__":
-    imgPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\test\12'
-    tagPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\test\12list_bbox_celeba.txt'
-    myTrain=MyTrain(Net='PNet',epoch=1,batchSize=5,imgPath=imgPath,tagPath=tagPath)
+    imgPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\test\48'
+    tagPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\test\48list_bbox_celeba.txt'
+    myTrain=MyTrain(Net='ONet',epoch=1,batchSize=1,imgPath=imgPath,tagPath=tagPath)
     myTrain.train()
 
     

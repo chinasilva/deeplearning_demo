@@ -33,3 +33,18 @@ print(torch.stack(lst,dim=4).size())
 
 # a=PLst[nms(PLst,overlap_threshold=0.7,mode='union')]
 # print(a[0][0])
+
+# print(np.arange(0,10))
+
+# nx,ny = (2,2)
+# #从0开始到1结束，返回一个numpy数组,nx代表数组中元素的个数
+# x = np.linspace(0,1,nx)
+# #[ 0.   0.5  1. ]
+# y = np.linspace(0,1,ny)
+# # [0.  1.]
+# xv,yv = np.meshgrid(x,y)
+# print("xv",xv)
+# print("yv",yv)
+# test=torch.rand(3,3)
+# print("test:",test)
+# print("test2:",torch.gt(test,0.6))

@@ -33,10 +33,10 @@ class MyData(data.Dataset):
             imgName=imgInfo[0]
 
             confidence=imgInfo[1]
-            offsetX1=imgInfo[2]
-            offsetY1=imgInfo[3]
-            offsetX2=imgInfo[4]
-            offsetY2=imgInfo[5]
+
+            offset=imgInfo[1:]
+            offset=[float(i) for i in offset]
+
             imgPath2=''
             if confidence==str(MyEnum.part.value):
                 imgPath2='part'
@@ -44,9 +44,9 @@ class MyData(data.Dataset):
                 imgPath2='positive'
             else :
                 imgPath2='negative'
-            offset=[confidence,offsetX1,offsetY1,offsetX2,offsetY2]
-            offset=torch.Tensor(np.array(offset,dtype=np.float16))
-            with Image.open(os.path.join(self.imgPath,imgPath2,imgName)) as img:
+            # offset=[confidence,offsetX1,offsetY1,offsetX2,offsetY2]
+            offset=torch.Tensor(offset)#.squeeze()
+            with Image.open(os.path.join(self.imgPath,imgPath2,imgName)).convert('RGB') as img:
                 imageData=trans.ToTensor()(img)- 0.5
                 return imageData,offset
         except Exception as e:
