@@ -69,44 +69,27 @@ class MyDetector():
                 imgData=trans.ToTensor()(img2) #- 0.5
                 imgData=imgData.unsqueeze(0).to(self.device)
                 outputClass,outputBox,outputLandMark=self.pnet(imgData)
-                outputClassValue,outputBoxValue=outputClass[0][0].cpu().data, outputBox[0].cpu().data
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ,outputBoxValue=outputClass[0][0].cpu().data, outputBox[0].cpu().data
+                
+                
                 #过滤置信度小于0.6的数据,并且返回对应索引
                 idxs = torch.nonzero(torch.gt(outputClassValue, 0.9))
                 
-                # x1=(idxs[:,1] * stride).float() / scale
-                # y1=(idxs[:,0] * stride).float() / scale
-                # x2=(idxs[:,1] * stride + self.pnetSize).float() / scale
-                # y2=(idxs[:,0] * stride + self.pnetSize).float() / scale
-                # w=x2-x1
-                # w=y2-y1
-                # _offset = offset[:, start_index[0], start_index[1]]
-                # x1 = _x1 + ow * _offset[0].int()
-                # y1 = _y1 + oh * _offset[1].int()
-                # x2 = _x2 + ow * _offset[2].int()
-                # y2 = _y2 + oh * _offset[3].int()
-                for idx in idxs:
-                    #通过偏移量反找原图位置
-                    box.append(backoriginImg(idx, outputBoxValue, outputClassValue[idx[0], idx[1]], scale))
+                x1=(idxs[:,1] * stride).float() / scale
+                y1=(idxs[:,0] * stride).float() / scale
+                x2=(idxs[:,1] * stride + self.pnetSize).float() / scale
+                y2=(idxs[:,0] * stride + self.pnetSize).float() / scale
+                ow=x2-x1
+                oh=y2-y1
+
+                _offset = outputBox[idxs]
+                x1 = x1 + ow * _offset[0].int()
+                y1 = y1 + oh * _offset[1].int()
+                x2 = x2 + ow * _offset[2].int()
+                y2 = y2 + oh * _offset[3].int()
+                box.append([x1, y1, x2, y2, outputClassValue])
                 scale=scale * scaleRate 
                 side=side * scaleRate #让面积每次缩放1/2，则边长缩放比例为(2**0.5)/2
-                
-                # def backoriginImg(start_index, offset, cls, scale, stride=2, side_len=12):
-
-                #     _x1 = (start_index[1] * stride).float() / scale
-                #     _y1 = (start_index[0] * stride).float() / scale
-                #     _x2 = (start_index[1] * stride + side_len).float() / scale
-                #     _y2 = (start_index[0] * stride + side_len).float() / scale
-
-                #     ow = _x2 - _x1
-                #     oh = _y2 - _y1
-
-                #     _offset = offset[:, start_index[0], start_index[1]]
-                #     x1 = _x1 + ow * _offset[0].int()
-                #     y1 = _y1 + oh * _offset[1].int()
-                #     x2 = _x2 + ow * _offset[2].int()
-                #     y2 = _y2 + oh * _offset[3].int()
-
-                #     return [x1, y1, x2, y2, cls]
 
                 h2= int(h*scale)
                 w2= int(w*scale)
