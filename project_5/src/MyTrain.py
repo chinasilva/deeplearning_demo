@@ -17,7 +17,7 @@ class MyTrain():
         '''
         self.netName=Net
         self.device=deviceFun()
-        self.fileLoction= str('C:/Users/liev/Desktop/code/deeplearning_homework/project_5/model/'+self.netName+'.pth')
+        self.fileLoction= str('/mnt/D/code/deeplearning_homework/project_5/model/'+self.netName+'.pth')
         if Net=='PNet':
             self.net=PNet().to(self.device)
         elif Net=='RNet':
@@ -80,8 +80,9 @@ class MyTrain():
                 print("train",str(e))
   
 if __name__ == "__main__":
-    imgPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\test\48'
-    tagPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\test\48list_bbox_celeba.txt'
+    
+    imgPath=r'/mnt/D/code/deeplearning_homework/project_5/test/48/positive'
+    tagPath=r'/mnt/D/code/deeplearning_homework/project_5/test/48'
     myTrain=MyTrain(Net='ONet',epoch=1,batchSize=1,imgPath=imgPath,tagPath=tagPath)
     myTrain.train()
 
