@@ -9,8 +9,9 @@ from MyEnum import MyEnum
 
 class ProcessImage():
     def __init__(self,imagePath,tagPath,saveImgPath,saveTagPath):
-        # self.sizeLst=[48,12,24]
-        self.sizeLst=[24]
+        self.sizeLst=[48,12,24]
+        # self.sizeLst=[12]
+        # self.sizeLst=[24]
         self.tagPath=tagPath
         self.saveTagPath=saveTagPath
         self.saveImgPath=saveImgPath
@@ -99,17 +100,17 @@ class ProcessImage():
                 dataset.extend(os.listdir(self.imagePath))
                 #根据所读的每个图片名称进行遍历
                 for i,imgName in enumerate(dataset) :
-                    j=0
-                    if i<1423:
+                    if i>140000:
+                        break
+                    if size==48 and i< 16736:
                         continue
+                    j=0
                     with Image.open(os.path.join(imagePath,imgName)).convert('RGB') as img:
-                        w,h=img.size
-                        centX=w/2
-                        centY=h/2
                         newTagLst=[]
-                        while j<30:
-                            newImgName=newImgNameLst[j//6]+str(j)+imgName
+                        while j<6:
+                            newImgName=str(j)+imgName
                             img1=img.resize((size,size))
+                            img1=img1.rotate(j*60)
                             savePath=saveImgPath+"/"+str(size)+"/"+'negative'
                             if  not os.path.exists(savePath):
                                 os.makedirs(savePath)
@@ -128,11 +129,11 @@ class ProcessImage():
 
 if __name__ == "__main__":
     # imagePath='F:/deeplearning/datasets/celeba/img_celeba/'
-    imagePath='D:/pic/'
+    imagePath='D:/img_celeba/'
     tagPath="F:/deeplearning/datasets/celeba/Anno/list_bbox_celeba.txt"
 
-    saveImgPath='D:/my_celebea/negative'
-    saveTagPath="D:/my_celebea/negative"
+    saveImgPath='D:/20190706'
+    saveTagPath="D:/20190706"
     process=ProcessImage(imagePath,tagPath,saveImgPath,saveTagPath)
     # process.main()
     process.negetiveMain()
