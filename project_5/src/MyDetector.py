@@ -59,48 +59,54 @@ class MyDetector():
             outLst=[]
             outLst2=[]
             stride=2
-            pos=[]
             scale=1
-            (h,w)=img.size
+            (w,h)=img.size
             img2=img
             side=min(h,w)
             while side>=self.pnetSize: #缩放至跟PNet建议框同样大小即可
-                box=[]
+                # box=[]
                 imgData=trans.ToTensor()(img2) #- 0.5
                 imgData=imgData.unsqueeze(0).to(self.device)
                 outputClass,outputBox,outputLandMark=self.pnet(imgData)
                 outputClassValue,outputBoxValue=outputClass[0][0].cpu().data, outputBox[0].cpu().data
-                
-                
+                outputBoxValue=outputBoxValue.permute(2,1,0)#(w,h,c)
+                tmpClass=outputClassValue.permute(1,0)#(w,h)
+
                 #过滤置信度小于0.6的数据,并且返回对应索引
-                idxs = torch.nonzero(torch.gt(outputClassValue, 0.9))
-                
-                x1=(idxs[:,1] * stride).float() / scale
-                y1=(idxs[:,0] * stride).float() / scale
-                x2=(idxs[:,1] * stride + self.pnetSize).float() / scale
-                y2=(idxs[:,0] * stride + self.pnetSize).float() / scale
+                idxs = torch.nonzero(torch.gt(tmpClass, 0.9))#(w,h)
+                x1=((idxs*stride).float() / scale)[:,0] 
+                y1=((idxs*stride).float() / scale)[:,1] 
+                x2=((idxs*stride + self.pnetSize).float() / scale)[:,0]
+                y2=((idxs*stride + self.pnetSize).float() / scale)[:,1]
+
                 ow=x2-x1
                 oh=y2-y1
 
-                _offset = outputBox[idxs]
-                x1 = x1 + ow * _offset[0].int()
-                y1 = y1 + oh * _offset[1].int()
-                x2 = x2 + ow * _offset[2].int()
-                y2 = y2 + oh * _offset[3].int()
-                box.append([x1, y1, x2, y2, outputClassValue])
+                offset = outputBoxValue[idxs[:,0],idxs[:,1]]
+                tmpClass=tmpClass[idxs[:,0],idxs[:,1]]
+                x1 = x1 + ow * offset[:,0]
+                y1 = y1 + oh * offset[:,1]
+                x2 = x2 + ow * offset[:,2]
+                y2 = y2 + oh * offset[:,3]
+                box=[x1, y1, x2, y2, tmpClass]
+                # box=[x1.int(), y1.int(), x2.int(), y2.int(), tmpClass]
                 scale=scale * scaleRate 
                 side=side * scaleRate #让面积每次缩放1/2，则边长缩放比例为(2**0.5)/2
 
                 h2= int(h*scale)
                 w2= int(w*scale)
 
-                img2=img2.resize((w2,h2))
-            
-                keep=nms(np.array(box),overlap_threshold=0.5)#将PNet出来的图片进行下一步操作
-                boxex=box[keep]
-                PLst.append(boxex)
+                img2=img2.resize((h2,w2))
+
+                boxex=torch.stack(box,dim=1).view(-1,5)
+                # keep=nms(np.array(box),overlap_threshold=0.5)#将PNet出来的图片进行下一步操作
+                boxex=nms2(np.array(boxex),thresh=0.3)#将PNet出来的图片进行下一步操作
+                if len(boxex)>0:
+                    PLst.extend(boxex)
+                    # np.stack(boxex)
+                
             #NMS后对图形做变换，方便传入RNet
-            PLst=convertToPosition(PLst)
+            PLst=convertToPosition(np.array(PLst))
             for p in PLst:
                 x1,y1,x2,y2=p[0:4]
                 img3=img.crop((x1,y1,x2,y2))
@@ -131,17 +137,21 @@ class MyDetector():
             outputBox=outputBox.cpu().data.numpy()
              #置信度大于0.99认为有人脸
             idxs, _ = np.where(outputClass > 0.9)
-            for index in idxs:
-                postionX1,postionY1,postionX2,postionY2=PLst2[index]
-                offset1,offset2,offset3,offset4=outputBox[index]
-                originImgPostionX1=offset1*w+postionX1#通过PNet输出的原图坐标和RNet输出的偏移量映射回新图坐标
-                originImgPostionY1=offset2*h+postionY1
-                originImgPostionX2=offset3*w+postionX2
-                originImgPostionY2=offset4*h+postionY2
-                originImgPostion=(int(originImgPostionX1),int(originImgPostionY1),int(originImgPostionX2),int(originImgPostionY2),float(outputClass[index]))
-                pos.append(originImgPostion)
 
-            RLst=nms2(np.array(pos),thresh=0.5)#将PNet出来的图片进行下一步操作
+            #过滤置信度小于0.6的数据,并且返回对应索引
+    
+            postion = PLst2[idxs]
+            offset=outputBox[idxs]
+            outputClass=outputClass[idxs]
+            
+            x1 = (postion[:,0] + w * offset[:,0]).reshape(-1,1)
+            y1 = (postion[:,1] + h * offset[:,1]).reshape(-1,1)
+            x2 = (postion[:,2] + w * offset[:,2]).reshape(-1,1)
+            y2 = (postion[:,3] + h * offset[:,3]).reshape(-1,1)
+            box=[x1, y1, x2, y2, outputClass]
+            box=np.stack(box,axis=1).reshape(-1,5)
+            
+            RLst=nms2(np.array(box),thresh=0.3)#将PNet出来的图片进行下一步操作
             for r in RLst:
                 x1,y1,x2,y2=r[0:4]
                 img2=img.crop((x1,y1,x2,y2))
@@ -165,20 +175,24 @@ class MyDetector():
             outputClass,outputBox,outputLandMark=self.onet(RLst.to(self.device))
             outputClass=outputClass.cpu().data.numpy()
             outputBox=outputBox.cpu().data.numpy()
-            #置信度大于0.99认为有人脸
-            idxs, _ = np.where(outputClass > 0.99)
-            for index in idxs:
-                postionX1,postionY1,postionX2,postionY2=RLst2[index][0:4]
-                offset1,offset2,offset3,offset4=outputBox[index]
-                originImgPostionX1=offset1*w+postionX1 #通过RNet输出的原图坐标和ONet输出的偏移量映射回新图坐标
-                originImgPostionY1=offset2*h+postionY1
-                originImgPostionX2=offset3*w+postionX2
-                originImgPostionY2=offset4*h+postionY2
-                
-                originImgPostion=(int(originImgPostionX1),int(originImgPostionY1),int(originImgPostionX2),int(originImgPostionY2),float(outputClass[index]))
-                pos.append(originImgPostion)
+
+             #置信度大于0.99认为有人脸
+            idxs, _ = np.where(outputClass > 0.9)
+
+            #过滤置信度小于0.6的数据,并且返回对应索引
+    
+            postion = RLst2[idxs]
+            offset=outputBox[idxs]
+            outputClass=outputClass[idxs]
+            
+            x1 = (postion[:,0] + w * offset[:,0]).reshape(-1,1)
+            y1 = (postion[:,1] + h * offset[:,1]).reshape(-1,1)
+            x2 = (postion[:,2] + w * offset[:,2]).reshape(-1,1)
+            y2 = (postion[:,3] + h * offset[:,3]).reshape(-1,1)
+            box=[x1, y1, x2, y2, outputClass]
+            box=np.stack(box,axis=1).reshape(-1,5)
             #输出OLst坐标
-            OLst=nms2(np.array(pos),thresh=0.3,isMin=True)
+            OLst=nms2(np.array(box),thresh=0.3,isMin=True)#将PNet出来的图片进行下一步操作
             if len(OLst)==0:
                 return []
         self.screenImgTest(OLst,self.imgName,'OLst')
@@ -186,7 +200,7 @@ class MyDetector():
 
     def screenImgTest(self,outLst2,imgName,text):
         with Image.open(os.path.join(self.testImagePath,imgName)).convert('RGB') as img:
-            img2=cv2.imread(self.testImagePath+'\\'+imgName)
+            img2=cv2.imread(self.testImagePath+'/'+imgName)
             for out in outLst2.astype(int):
                     x1=out[0]
                     y1=out[1]
@@ -197,6 +211,7 @@ class MyDetector():
             cv2.imshow('image',img2)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
+
 if __name__ == "__main__":
     testImagePath=r'/mnt/D/code/deeplearning_homework/project_5/test/12/positive'
     # tagPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\test\12list_bbox_celeba.txt'
