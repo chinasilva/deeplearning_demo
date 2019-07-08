@@ -36,7 +36,6 @@ class MyData(data.Dataset):
 
             offset=imgInfo[1:]
             offset=[float(i) for i in offset]
-
             imgPath2=''
             if confidence==str(MyEnum.part.value):
                 imgPath2='part'
