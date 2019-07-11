@@ -6,6 +6,10 @@ from PIL import Image,ImageDraw
 import os
 import torch
 # %matplotlib inline
+def oneHot(clsNum,v):
+    a=np.zeros(clsNum)
+    a[v]=1
+    return a
 
 def iouFun (image0,image1):
     (r01,r02,confidence)=image0
@@ -76,47 +80,12 @@ def writeTag(path,tagLst):
             f.write(str.format("{0}  {1}  {2}  {3}  {4} {5}",newImgName,flag,x1,x2,y1,y2))
             f.write('\n')
 
-def processImage(newImgName,imgName,imagePath,saveImgPath,imgPath2,saveTagPath,offset,newImgPosition, outImgSize=12):
-    '''
-    逐张处理图片
-    outImgSize:默认处理尺寸为12
-    根据标签从原图抠出图片，并且进行按照比列切割
-    offset=(imgName,flag,x1,x2,y1,y2)
-    '''
-    try:
-        newTagLst=[]
-        with Image.open(os.path.join(imagePath)) as img:
-            img1=img.crop(newImgPosition)
-            img1=img1.resize((outImgSize,outImgSize))
-            savePath=saveImgPath+"/"+str(outImgSize)+"/"+imgPath2+"/"
-            if  not os.path.exists(savePath):
-                os.makedirs(savePath)
-            savePath=savePath+newImgName
-            img1.save(savePath)
-            newTagLst.append(offset)
-            # if len(self.newTagLst)%100==0: # 每100次写一次
-            saveTagPath2=saveTagPath+str(outImgSize)+'list_wide_face.txt'
-            writeTag(saveTagPath2,newTagLst)
-    except Exception as e:
-        print("ERROR:",imgName+str(e))
-
-def pltFun(image0,img,imgName):
-    (r01,r02,confidence)=image0
-    (x01,y01)=r01
-    (x02,y02)=r02
-    
-    dr = ImageDraw.Draw(img)
-    (x01,y01)=r01  
-    (x02,y02)=r02
-    dr.rectangle(((x01,y01),(x02,y02)), fill=None, outline = 0)
-    img.save(imgName)
-    
 def createImage(imgName):
     img = Image.new('RGB', (100, 100), color = (255,255,255))   
     img.save(imgName)
     return img
 
-def nms(boxes, overlap_threshold=0.5, mode='union'):
+def nms2(boxes, overlap_threshold=0.5, mode='union'):
     """Non-maximum suppression.
     Arguments:
         boxes: a float numpy array of shape [n, 5],
@@ -180,7 +149,7 @@ def nms(boxes, overlap_threshold=0.5, mode='union'):
     return pick
 
 #liewei-nms
-def nms2(boxes, thresh=0.3, isMin = False):
+def nms(boxes, thresh=0.3, isMin = False):
 
     if boxes.shape[0] == 0:
         return np.array([])
@@ -227,43 +196,6 @@ def deviceFun():
     print(device)
     return device
 
-def convertToPosition(originPosition):
-    '''
-    根据原图坐标进行最短边补齐
-    '''
-    newImg=originPosition.copy()
-    if len(originPosition) == 0:
-        return []
-    originImgW=np.int16(originPosition[:,2]-originPosition[:,0])
-    originImgH=np.int16(originPosition[:,3]-originPosition[:,1])
-    maxSide=np.maximum(originImgW,originImgH) #获取最长边max(originImgW,originImgH)
-    #按照最长边进行抠图，短边进行补全
-    newImg[:,0]=originPosition[:,0]+originImgW*0.5-maxSide*0.5
-    newImg[:,1]=originPosition[:,1]+originImgH*0.5-maxSide*0.5
-    newImg[:,2]=originPosition[:,2]+maxSide # *0.5-originImgW*0.5
-    newImg[:,3]=originPosition[:,3]+maxSide # *0.5-originImgH*0.5
-    newImg[:,4]=originPosition[:,4]
-    return newImg
-
-# 求出当前坐标,并还原到原图上去
-def backoriginImg(start_index, offset, cls, scale, stride=2, side_len=12):
-
-        _x1 = (start_index[1] * stride).float() / scale
-        _y1 = (start_index[0] * stride).float() / scale
-        _x2 = (start_index[1] * stride + side_len).float() / scale
-        _y2 = (start_index[0] * stride + side_len).float() / scale
-
-        ow = _x2 - _x1
-        oh = _y2 - _y1
-
-        _offset = offset[:, start_index[0], start_index[1]]
-        x1 = _x1 + ow * _offset[0].int()
-        y1 = _y1 + oh * _offset[1].int()
-        x2 = _x2 + ow * _offset[2].int()
-        y2 = _y2 + oh * _offset[3].int()
-
-        return [x1, y1, x2, y2, cls]
-
 def myRectangle(self,imageInfo,img,imgName):
     '''
     画框
@@ -281,93 +213,6 @@ def myRectangle(self,imageInfo,img,imgName):
     plt.savefig(imgName)
     return None
 
-def padImage(self, image,imgName, targetSize,savePath):
-    '''
-    按比例缩放并填充,先填充后缩放
-    '''
-    iw, ih = image.size  # 原始图像的尺寸
-    w, h = targetSize  # 目标图像的尺寸
-    scale = min(w / iw, h / ih)  # 转换的最小比例
-
-    # 保证长或宽，至少一个符合目标图像的尺寸
-    nw = int(iw * scale)
-    nh = int(ih * scale)
-
-    image = image.resize((nw, nh), Image.BICUBIC)  # 缩小图像
-    newImage = Image.new('RGB', targetSize, (255,255,255))
-    # // 为整数除法，计算图像的位置
-    newImage.paste(image, ((w - nw) // 2, (h - nh) // 2))  # 将图像填充为中间图像，两侧为灰色的样式
-    newImgName=os.path.join(savePath,'12new-'+imgName)
-    newImage.save(newImgName)
-
-    return newImgName
-
-def padImage2(self, image,imgName,imageInfo, targetSize,savePath):
-    '''
-    1.按比例缩放并填充，先缩放后填充
-    2.进行记录标签要更改的偏移量
-    '''
-    x1=float(imageInfo[1])
-    y1=float(imageInfo[2])
-    width=float(imageInfo[3])
-    height=float(imageInfo[4])
-
-    iw, ih = image.size  # 原始图像的尺寸
-    w, h = targetSize  # 目标图像的尺寸
-    maxValue= max(iw, ih)
-    paddingW=(maxValue-iw)//2
-    paddingH=(maxValue-ih)//2
-    # 先填充,后resize
-    newImage = Image.new('RGB', (maxValue,maxValue), (255,255,255))
-    newImage.paste(image, (paddingW,paddingH))  # 将图像填充为中间图像，两侧为灰色的样式
-    
-    #求出偏移量，并且对偏移量进行放缩，默认目标图w=h
-    offsetX1= round( (x1+paddingW)/w, 2)
-    offsetY1= round((y1+paddingH)/w,2)
-    offsetX2= round(((x1+width)-iw+paddingW)/w,2)
-    offsetY2= round(((y1+height)-ih+paddingH)/w,2)
-
-    #进行缩放
-    newImage = newImage.resize((w, h), Image.BICUBIC)  # 缩小图像
-    newImgName=os.path.join(savePath,imgName)
-    newImage.save(newImgName)
-    offset=(imgName,offsetX1,offsetY1,offsetX2,offsetY2)
-    return offset
-
-def offsetImage(self, image,imgName,imageInfo, targetSize,savePath):
-    '''
-    1.按比例缩放并填充，先缩放后填充
-    2.进行记录标签要更改的偏移量
-    '''
-    x1=float(imageInfo[1])
-    y1=float(imageInfo[2])
-    width=float(imageInfo[3])
-    height=float(imageInfo[4])
-
-    box=(x1,y1,width,height)
-    image=image.crop(box)
-
-    iw, ih = image.size  # 原始图像的尺寸
-    w, h = targetSize  # 目标图像的尺寸
-    maxValue= max(iw, ih)
-    paddingW=(maxValue-iw)//2
-    paddingH=(maxValue-ih)//2
-    # 先填充,后resize
-    newImage = Image.new('RGB', (maxValue,maxValue), (255,255,255))
-    newImage.paste(image, (paddingW,paddingH))  # 将图像填充为中间图像，两侧为灰色的样式
-    
-    #求出偏移量，并且对偏移量进行放缩，默认目标图w=h
-    offsetX1= round( (x1+paddingW)/w, 2)
-    offsetY1= round((y1+paddingH)/w,2)
-    offsetX2= round(((x1+width)-iw+paddingW)/w,2)
-    offsetY2= round(((y1+height)-ih+paddingH)/w,2)
-
-    #进行缩放
-    newImage = newImage.resize((w, h), Image.BICUBIC)  # 缩小图像
-    newImgName=os.path.join(savePath,imgName)
-    newImage.save(newImgName)
-    offset=(imgName,offsetX1,offsetY1,offsetX2,offsetY2)
-    return offset
 
 if __name__ == "__main__":
     box=[]
