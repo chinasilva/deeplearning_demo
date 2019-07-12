@@ -4,7 +4,7 @@ import numpy as np
 from torch.utils import data
 import torchvision.transforms as trans
 from PIL import Image
-from ProcessImage import ProcessImage
+# from ProcessImage import ProcessImage
 from datetime import datetime
 from MyEnum import MyEnum
 from utils import readTag

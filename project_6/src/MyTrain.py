@@ -22,25 +22,31 @@ class MyTrain():
         if os.path.exists(modelLoction):
             self.net=torch.load(modelLoction)
         self.optimizer=torch.optim.Adam(self.net.parameters())
-        
+    
+    def myLoss(self,output,target,alpha):
+        output=output.permute(0,2,3,1) #(n,h,w,c)
+        output=output.reshape(output.size(0),output.size(1),output.size(2),3,-1) #(n,h,w,3,c)
+        index=target[...,0]>0
+        index2=target[...,0]==0
+        loss1=self.lossFun(output[index],target[index]) 
+        loss2=self.lossFun(output[index2],target[index2]) 
+        loss=alpha*loss1+(1-alpha)*loss2
+        return loss
+
     def train(self):
         trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,drop_last=True,num_workers=0)
         # testData=data.DataLoader(self.testData,batch_size=self.batchSize,shuffle=True)
         # trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=False,drop_last=True)
-        losslst=[]
+        # losslst=[]
         for i in range(self.epoch):
             print("epoch:",i)
             try:
-                for j,(net13,net26,net52,img) in enumerate(trainData):
+                for j,(target13,target26,target52,img) in enumerate(trainData):
                     a=datetime.now()
                     o13,o26,o52=self.net(img).to(self.device)
-                    _o13=o13.permute(0,2,3,1) #(n,h,w,c)
-                    _o13=_o13.reshape(_o13.size(0),_o13.size(1),_o13.size(2),3,-1) #(n,h,w,3,c)
-
-
-                    loss1= self.lossFun(net13,o13)
-                    loss2= self.lossFun(net26,o26)
-                    loss3= self.lossFun(net52,o52)
+                    loss1=self.myLoss(o13,target13,0.9)                    
+                    loss2=self.myLoss(o26,target26,0.9)                    
+                    loss3=self.myLoss(o52,target52,0.9)                    
                     loss=loss1+loss2+loss3
 
                     self.optimizer.zero_grad()

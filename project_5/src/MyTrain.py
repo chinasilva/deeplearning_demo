@@ -20,7 +20,7 @@ class MyTrain():
         self.netName=Net
         self.testResult=testResult
         self.device=deviceFun()
-        self.fileLoction= str('/mnt/D/code/deeplearning_homework/project_5/model/'+self.netName+'.pth')
+        self.modelPath= str('/home/chinasilva/code/deeplearning_homework/project_5/model/'+self.netName+'.pth')
         if Net=='PNet':
             self.net=PNet().to(self.device)
         elif Net=='RNet':
@@ -32,17 +32,17 @@ class MyTrain():
         self.batchSize=batchSize
         self.epoch=epoch
         self.myData=MyData(tagPath,imgPath)
-        self.testData=MyData(testTagPath,testImgPath)
+        # self.testData=MyData(testTagPath,testImgPath)
         # self.lossFun1=nn.BCEWithLogitsLoss()
         self.lossFun1=nn.BCELoss()
         self.lossFun2=nn.MSELoss()
-        if os.path.exists(self.fileLoction):
-            self.net=torch.load(self.fileLoction)
+        if os.path.exists(self.modelPath):
+            self.net=torch.load(self.modelPath)
         self.optimizer=torch.optim.Adam(self.net.parameters())
         
     def train(self):
-        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,drop_last=True,num_workers=0)
-        testData=data.DataLoader(self.testData,batch_size=self.batchSize,shuffle=True)
+        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,drop_last=True,num_workers=4)
+        # testData=data.DataLoader(self.testData,batch_size=self.batchSize,shuffle=True)
         # trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=False,drop_last=True)
         losslst=[]
         for i in range(self.epoch):
@@ -80,31 +80,31 @@ class MyTrain():
                     b=datetime.now()
                     c=(b-a).microseconds//1000
                     print("epoch:{},batch:{}, loss1:{},loss2:{},loss:{},用时{}ms".format(i,j,loss1.data,loss2.data,loss.data,c))
-                    torch.save(self.net,self.fileLoction)
+                    torch.save(self.net,self.modelPath)
                     
-                    if j%10==0:  #每10批次打印loss
-                        with torch.no_grad():
-                            self.net.eval()
-                            correct = 0.
-                            error = 0.
-                            total = 0.
-                            for _,(input, target) in enumerate(testData):
-                                input, target = input.to(self.device), target.to(self.device)
-                                output,outputBox,outputLandMark = self.net(input)
-                                predicted=output[:,0,0,0] #输出的2个值
-                                target=target[:,0]
-                                # _, predicted = torch.max(output.data, 1)
-                                total += target.size(0)
-                                predicted=torch.where(predicted<0.1,torch.zeros_like(predicted),predicted)
-                                predicted=torch.where(predicted>0.9,torch.ones_like(predicted),predicted)
-                                correct += (predicted == target).sum()
-                                error += (predicted != target).sum()
-                                accuracy = correct.float() / total
-                                recall = correct.float() / correct+error
+                    # if j%10==0:  #每10批次打印loss
+                    #     with torch.no_grad():
+                    #         self.net.eval()
+                    #         correct = 0.
+                    #         error = 0.
+                    #         total = 0.
+                    #         for _,(input, target) in enumerate(testData):
+                    #             input, target = input.to(self.device), target.to(self.device)
+                    #             output,outputBox,outputLandMark = self.net(input)
+                    #             predicted=output[:,0,0,0] #输出的2个值
+                    #             target=target[:,0]
+                    #             # _, predicted = torch.max(output.data, 1)
+                    #             total += target.size(0)
+                    #             predicted=torch.where(predicted<0.1,torch.zeros_like(predicted),predicted)
+                    #             predicted=torch.where(predicted>0.9,torch.ones_like(predicted),predicted)
+                    #             correct += (predicted == target).sum()
+                    #             error += (predicted != target).sum()
+                    #             accuracy = correct.float() / total
+                    #             recall = correct.float() / correct+error
 
-                            print("[epochs - {0}]Accuracy:{1}%".format(i + 1, (100 * accuracy)))
-                            tagLst=[self.netName,i + 1,(100 * accuracy),(100 *recall),0]
-                            writeTag(self.testResult,tagLst)
+                    #         print("[epochs - {0}]Accuracy:{1}%".format(i + 1, (100 * accuracy)))
+                    #         tagLst=[self.netName,i + 1,(100 * accuracy),(100 *recall),0]
+                    #         writeTag(self.testResult,tagLst)
             except Exception as e:
                 print("train",str(e))
   
