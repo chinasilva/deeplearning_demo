@@ -85,7 +85,7 @@ def processImage(newImgName,imgName,imagePath,saveImgPath,imgPath2,saveTagPath,o
     '''
     try:
         newTagLst=[]
-        with Image.open(os.path.join(imagePath)) as img:
+        with Image.open(os.path.join(imagePath,imgName)) as img:
             img1=img.crop(newImgPosition)
             img1=img1.resize((outImgSize,outImgSize))
             savePath=saveImgPath+"/"+str(outImgSize)+"/"+imgPath2+"/"

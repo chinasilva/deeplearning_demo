@@ -2,7 +2,7 @@ import torch
 import torch.nn
 import torchvision.transforms as trans
 import numpy as np
-import os
+import os, sys
 from PIL import Image,ImageDraw
 from matplotlib.pyplot import imshow
 import matplotlib.pyplot as plt
@@ -83,12 +83,12 @@ class MyDetector():
                 oh=y2-y1
 
                 offset = outputBoxValue[idxs[:,0],idxs[:,1]]
-                tmpClass=tmpClass[idxs[:,0],idxs[:,1]]
-                x1 = x1 + ow * offset[:,0]
-                y1 = y1 + oh * offset[:,1]
-                x2 = x2 + ow * offset[:,2]
-                y2 = y2 + oh * offset[:,3]
-                box=[x1, y1, x2, y2, tmpClass]
+                conf=tmpClass[idxs[:,0],idxs[:,1]]
+                x1 = x1 - ow * offset[:,0]
+                y1 = y1 - oh * offset[:,1]
+                x2 = x2 - ow * offset[:,2]
+                y2 = y2 - oh * offset[:,3]
+                box=[x1, y1, x2, y2, conf]
                 # box=[x1.int(), y1.int(), x2.int(), y2.int(), tmpClass]
                 scale=scale * scaleRate 
                 side=side * scaleRate #让面积每次缩放1/2，则边长缩放比例为(2**0.5)/2
@@ -98,16 +98,18 @@ class MyDetector():
 
                 img2=img2.resize((h2,w2))
 
-                boxex=torch.stack(box,dim=1).view(-1,5)
+            
+                boxes=torch.stack(box,dim=1).view(-1,5)
                 # keep=nms(np.array(box),overlap_threshold=0.5)#将PNet出来的图片进行下一步操作
-                boxex=nms2(np.array(boxex),thresh=0.3)#将PNet出来的图片进行下一步操作
-                if len(boxex)>0:
-                    PLst.extend(boxex)
-                    # np.stack(boxex)
-                
+                boxes=nms2(np.array(boxes),thresh=0.5)#将PNet出来的图片进行下一步操作
+                if len(boxes)>0:
+                    PLst.extend(boxes)
+                    # np.stack(boxes)
+
+            PLst2=nms2(np.array(PLst),thresh=0.5)
             #NMS后对图形做变换，方便传入RNet
-            PLst=convertToPosition(np.array(PLst))
-            for p in PLst:
+            PLst2=convertToPosition(np.array(PLst2))
+            for p in PLst2:
                 x1,y1,x2,y2=p[0:4]
                 img3=img.crop((x1,y1,x2,y2))
                 # img3=img.crop((y1,x1,y2,x2))
@@ -136,7 +138,7 @@ class MyDetector():
             outputClass=outputClass.cpu().data.numpy()
             outputBox=outputBox.cpu().data.numpy()
              #置信度大于0.99认为有人脸
-            idxs, _ = np.where(outputClass > 0.9)
+            idxs, _ = np.where(outputClass > 0.99)
 
             #过滤置信度小于0.6的数据,并且返回对应索引
     
@@ -144,14 +146,14 @@ class MyDetector():
             offset=outputBox[idxs]
             outputClass=outputClass[idxs]
             
-            x1 = (postion[:,0] + w * offset[:,0]).reshape(-1,1)
-            y1 = (postion[:,1] + h * offset[:,1]).reshape(-1,1)
-            x2 = (postion[:,2] + w * offset[:,2]).reshape(-1,1)
-            y2 = (postion[:,3] + h * offset[:,3]).reshape(-1,1)
+            x1 = (postion[:,0] - w * offset[:,0]).reshape(-1,1)
+            y1 = (postion[:,1] - h * offset[:,1]).reshape(-1,1)
+            x2 = (postion[:,2] - w * offset[:,2]).reshape(-1,1)
+            y2 = (postion[:,3] - h * offset[:,3]).reshape(-1,1)
             box=[x1, y1, x2, y2, outputClass]
             box=np.stack(box,axis=1).reshape(-1,5)
             
-            RLst=nms2(np.array(box),thresh=0.3)#将PNet出来的图片进行下一步操作
+            RLst=nms2(np.array(box),thresh=0.5)#将PNet出来的图片进行下一步操作
             for r in RLst:
                 x1,y1,x2,y2=r[0:4]
                 img2=img.crop((x1,y1,x2,y2))
@@ -177,7 +179,7 @@ class MyDetector():
             outputBox=outputBox.cpu().data.numpy()
 
              #置信度大于0.99认为有人脸
-            idxs, _ = np.where(outputClass > 0.9)
+            idxs, _ = np.where(outputClass > 0.999)
 
             #过滤置信度小于0.6的数据,并且返回对应索引
     
@@ -185,14 +187,14 @@ class MyDetector():
             offset=outputBox[idxs]
             outputClass=outputClass[idxs]
             
-            x1 = (postion[:,0] + w * offset[:,0]).reshape(-1,1)
-            y1 = (postion[:,1] + h * offset[:,1]).reshape(-1,1)
-            x2 = (postion[:,2] + w * offset[:,2]).reshape(-1,1)
-            y2 = (postion[:,3] + h * offset[:,3]).reshape(-1,1)
+            x1 = (postion[:,0] - w * offset[:,0]).reshape(-1,1)
+            y1 = (postion[:,1] - h * offset[:,1]).reshape(-1,1)
+            x2 = (postion[:,2] - w * offset[:,2]).reshape(-1,1)
+            y2 = (postion[:,3] - h * offset[:,3]).reshape(-1,1)
             box=[x1, y1, x2, y2, outputClass]
             box=np.stack(box,axis=1).reshape(-1,5)
             #输出OLst坐标
-            OLst=nms2(np.array(box),thresh=0.3,isMin=True)#将PNet出来的图片进行下一步操作
+            OLst=nms2(np.array(box),thresh=0.5,isMin=True)#将PNet出来的图片进行下一步操作
             if len(OLst)==0:
                 return []
         self.screenImgTest(OLst,self.imgName,'OLst')
@@ -213,10 +215,10 @@ class MyDetector():
             cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    testImagePath=r'/mnt/D/code/deeplearning_homework/project_5/test/12/positive'
+    testImagePath=r'/home/chinasilva/code/deeplearning_homework/project_5/images_val/mytest'
     # tagPath=r'C:\Users\liev\Desktop\code\deeplearning_homework\project_5\test\12list_bbox_celeba.txt'
    
-    netPath=r'/mnt/D/code/deeplearning_homework/project_5/model'
+    netPath=r'/home/chinasilva/code/deeplearning_homework/project_5/model'
     detector=MyDetector(testImagePath,netPath)
     detector.main()
 

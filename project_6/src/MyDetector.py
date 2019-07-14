@@ -32,10 +32,12 @@ class MyDetector:
 
     def myDetector(self,img):
         output13,output26,output52=self.net(img).to(self.device)
-        self.trans(output13,0.8)
-        self.trans(output26,0.8)
-        self.trans(output52,0.8)
-
+        indx,result=self.trans(output13,0.8)
+        indx2,result2=self.trans(output26,0.8)
+        indx3,result3=self.trans(output52,0.8)
+        =self.convertOldImg(indx,result,scole)
+        self.convertOldImg(indx2,result3,scole)
+        self.convertOldImg(indx3,result3,scole)
 
     def trans(self,output,alpha):
         output=output.permute(0,2,3,1) #(N,H,W,C)
@@ -47,19 +49,27 @@ class MyDetector:
         return indx,result
     
     def convertOldImg(self,indx,result,scole):
-        a=indx[:,3] #(N,H,W,3,C),相当于3的那个维度,代表了3个锚框
-        # n=indx[:,0] #代表批次N
+       
 
         '''
         反算原图坐标:
         对应关系，1.索引即标签索引,值即标签索引对应的值
                 2.
         '''
+        a=indx[:,3] #(N,H,W,3,C),相当于3的那个维度,代表了3个锚框
+        n=indx[:,0] #代表批次N
         oy=(indx[:,1]+result[:,2])*scole 
         ox=(indx[:,2]+result[:,1])*scole
 
+        w=np.exp(result[:3])*aw
+        h=np.exp(result[:4])*ah
 
-
+        x1=ox-w/2
+        y1=oy-h/2
+        x2=ox+w/2
+        y2=oy+h/2
+        
+        return x1,y1,x2,y2
 
 if __name__ == "__main__":
     testImagePath=r'/mnt/D/code/deeplearning_homework/project_5/test/12/positive'
