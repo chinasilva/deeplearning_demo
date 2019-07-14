@@ -15,12 +15,13 @@ from utils import nms,createImage,pltFun,deviceFun
 # print(torch.stack(lst,dim=4).size())
 
 a= torch.range(1,10)
-output=a.reshape(2,5)
-# print(a[1]-a[0])
-# a1,b1=torch.max(output, 1)
+output=a.reshape(10)
+print(torch.where(output==1,torch.ones_like(output),torch.zeros_like(output)).sum())
+# # print(a[1]-a[0])
+# # a1,b1=torch.max(output, 1)
 
-output=[x for x in output if x > 5]
-print("output",output)
+# output=[x for x in output if x > 5]
+# print("output",output)
 # print("a,b",a1,b1)
 # b=a[:,:1]
 # print("---",b) 

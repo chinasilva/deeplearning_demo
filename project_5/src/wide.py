@@ -66,14 +66,14 @@ class WiderFaceDataset(Dataset):
             if image_name == line:
                 return i
 if __name__ == '__main__':
-    images_folder = '/media/chinasilva/编程资料/deeplearning/datasets/wider_face/WIDER_train/images'
-    save_images_folder = '/mnt/my_wider_face'
-    save_tag_path = '/mnt/my_wider_face/'
+    images_folder = '/media/chinasilva/编程资料/deeplearning/datasets/wider_face/WIDER_val/images'
+    save_images_folder = '/mnt/my_wider_face_val'
+    save_tag_path = '/mnt/my_wider_face_val/'
     
-    ground_truth_file = open('/media/chinasilva/编程资料/deeplearning/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt', 'r')
+    ground_truth_file = open('/media/chinasilva/编程资料/deeplearning/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt', 'r')
 
-    dataset = WiderFaceDataset(images_folder='/media/chinasilva/编程资料/deeplearning/datasets/wider_face/WIDER_train/images',
-                                ground_truth_file='/media/chinasilva/编程资料/deeplearning/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt',
+    dataset = WiderFaceDataset(images_folder=images_folder,
+                                ground_truth_file='/media/chinasilva/编程资料/deeplearning/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt',
                                 transform=transfroms.ToTensor(),
                                 target_transform=lambda x: torch.tensor(x))
     newImgNameLst=['a','b','c','d','e']
@@ -135,17 +135,17 @@ if __name__ == '__main__':
                         #分别执行，1.从原图抠图 2.保存不同尺寸图片 3.保存坐标文件
                         imgPath2=''
                         confidence=0
-                        # if iouValue>0.65:
-                        #     imgPath2='positive'
-                        #     confidence=MyEnum.positive.value
-                        if iouValue<0.3:
+                        if iouValue>0.65:
+                            imgPath2='positive'
+                            confidence=MyEnum.positive.value
+                        elif iouValue<0.3:
                             imgPath2='negative'
                             confidence=MyEnum.negative.value
                         # elif iouValue>0.4 or iouValue<0.65:
                         #     imgPath2='part'
                         #     confidence=MyEnum.part.value
                         if imgPath2:
-                            newImgName='b'+"-"+str(s)+"-"+str(j)+"-"+image_name_detail
+                            newImgName='v'+"-"+str(s)+"-"+str(j)+"-"+image_name_detail
                             if imgPath2=='negative':
                                 offset=(newImgName,confidence,0,0,0,0)
                             else:

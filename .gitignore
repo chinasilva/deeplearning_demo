@@ -4,6 +4,6 @@
 *.pyc
 *.txt
 *.pth
-
-
+*.jpeg
+*.zip
 

@@ -9,7 +9,7 @@ from MyEnum import MyEnum
 
 class ProcessImage():
     def __init__(self,imagePath,tagPath,saveImgPath,saveTagPath):
-        self.sizeLst=[48,12,24]
+        self.sizeLst=[48]
         # self.sizeLst=[12]
         # self.sizeLst=[24]
         self.tagPath=tagPath
@@ -26,6 +26,8 @@ class ProcessImage():
                 tagLst=readTag(self.tagPath)
                 #根据所读的每个标签进行循环
                 for i,line in enumerate(tagLst) :
+                    if i>25000:
+                        return
                     imageInfo = line.split()#将单个数据分隔开存好
                     imgName=imageInfo[0]
                     x=int(imageInfo[1])
@@ -42,11 +44,15 @@ class ProcessImage():
                     centY=y+h/2
                     #对下面操作执行多次，产生多张图片
                     j=0
-                    while j<5:
+                    bigsize=0
+                    while j<2:
+                        bigsize=bigsize+1
+                        if bigsize>1000: # 重复1000次，仍然没有匹配认为匹配不了
+                            j=j+1
                         #1.移动最小w，h的正负0.2倍，定义最大边长为最小w,h 0.8~最大w,h 1.2 倍
                         #2.按最小边倍数随机移动，得到最新框图，并且计算出坐标
-                        movePosition1=random.uniform(-0.6, 0.6) * min(w,h)
-                        movePosition2=random.uniform(-0.6, 0.6) * min(w,h)
+                        movePosition1=random.uniform(-0.2, 0.2) * min(w,h)
+                        movePosition2=random.uniform(-0.2, 0.2) * min(w,h)
                         rand=random.uniform(0.8, 1.2)
                         side=random.uniform(rand * min(w,h), rand* max(w,h)) 
                         #新图形中心点坐标
@@ -71,16 +77,16 @@ class ProcessImage():
                         #分别执行，1.从原图抠图 2.保存不同尺寸图片 3.保存坐标文件
                         imgPath2=''
                         confidence=0
-                        # if iouValue>0.7:
-                        #     imgPath2='positive'
-                        #     confidence=MyEnum.positive.value
-                        # elif iouValue<0.1:
-                        #     imgPath2='negative'
-                        #     confidence=MyEnum.negative.value
+                        if iouValue>0.7:
+                            imgPath2='positive'
+                            confidence=MyEnum.positive.value
+                        elif iouValue<0.3:
+                            imgPath2='negative'
+                            confidence=MyEnum.negative.value
                         # elif iouValue>0.1 and iouValue<0.35:
-                        if iouValue>=0 and iouValue<0.35:
-                            imgPath2='part'
-                            confidence=MyEnum.part.value
+                        # if iouValue>=0 and iouValue<0.35:
+                        #     imgPath2='part'
+                        #     confidence=MyEnum.part.value
                         if imgPath2:
                             newImgName=newImgNameLst[j]+imgName
                             offset=(newImgName,confidence,offsetX1,offsetY1,offsetX2,offsetY2)
@@ -129,13 +135,14 @@ class ProcessImage():
 
 if __name__ == "__main__":
     # imagePath='F:/deeplearning/datasets/celeba/img_celeba/'
-    imagePath='D:/img_celeba/'
-    tagPath="F:/deeplearning/datasets/celeba/Anno/list_bbox_celeba.txt"
+    imagePath = '/media/chinasilva/编程资料/deeplearning/datasets/celeba/img_celeba/'
+    saveImgPath = '/mnt/celeba'
+    saveTagPath = '/mnt/celeba/'
+    
+    tagPath="/media/chinasilva/编程资料/deeplearning/datasets/celeba/Anno/list_bbox_celeba.txt"
 
-    saveImgPath='D:/20190706'
-    saveTagPath="D:/20190706"
     process=ProcessImage(imagePath,tagPath,saveImgPath,saveTagPath)
-    # process.main()
-    process.negetiveMain()
+    process.main()
+    # process.negetiveMain()
 
 
