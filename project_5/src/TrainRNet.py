@@ -1,9 +1,8 @@
 from MyTrain import MyTrain
 
 if __name__ == "__main__":
-    imgPath=r'/mnt/my_wider_face/24'
-    tagPath=r'/mnt/my_wider_face/24list_wide_face.txt'
-    testTagPath=r'/mnt/D/my_celebea/txt/test24.txt'
+    imgPath=r'/mnt/my_wider_face_train/24'
+    tagPath=r'/mnt/my_wider_face_train/24list_wide_face.txt'
 
     testTagPath=r'/mnt/my_wider_face_val/24list_wide_face.txt'
     testImgPath=r'/mnt/my_wider_face_val/24'

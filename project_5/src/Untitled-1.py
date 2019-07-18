@@ -14,9 +14,14 @@ from utils import nms,createImage,pltFun,deviceFun
 # lst=[test,test2,test2]
 # print(torch.stack(lst,dim=4).size())
 
-a= torch.range(1,10)
-output=a.reshape(10)
-print(torch.where(output==1,torch.ones_like(output),torch.zeros_like(output)).sum())
+a= torch.range(11,21)
+output=a.reshape(11,1)
+outLen=int((output.size()[0]*0.7))
+output2=output[:][torch.argsort(output[:,0],dim=0,descending=True)]
+output2=torch.mean(output2[0:outLen+1])
+
+print(output2)
+# print(torch.where(output==1,torch.ones_like(output),torch.zeros_like(output)).sum())
 # # print(a[1]-a[0])
 # # a1,b1=torch.max(output, 1)
 
