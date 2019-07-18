@@ -45,6 +45,10 @@ class WiderFaceDataset(Dataset):
         rects = []
         for i in range(loc + 2, loc + 2 + face_nums):
             line = self.ground_truth[i]
+            if line.split(' ')[4]=='2': #过滤掉不清晰照片
+                continue
+            if line.split(' ')[7]=='1': #过滤掉无效照片
+                continue
             x, y, w, h = line.split(' ')[:4]
             x, y, w, h = list(map(lambda k: int(k), [x, y, w, h]))
             rects.append([x, y, w, h])
@@ -66,18 +70,18 @@ class WiderFaceDataset(Dataset):
             if image_name == line:
                 return i
 if __name__ == '__main__':
-    images_folder = '/media/chinasilva/编程资料/deeplearning/datasets/wider_face/WIDER_val/images'
-    save_images_folder = '/mnt/my_wider_face_val'
-    save_tag_path = '/mnt/my_wider_face_val/'
+    images_folder = '/media/chinasilva/编程资料/deeplearning/datasets/wider_face/WIDER_train/images'
+    save_images_folder = '/mnt/my_wider_face_train'
+    save_tag_path = '/mnt/my_wider_face_train/'
     
-    ground_truth_file = open('/media/chinasilva/编程资料/deeplearning/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt', 'r')
+    ground_truth_file = open('/media/chinasilva/编程资料/deeplearning/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt', 'r')
 
     dataset = WiderFaceDataset(images_folder=images_folder,
-                                ground_truth_file='/media/chinasilva/编程资料/deeplearning/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt',
+                                ground_truth_file='/media/chinasilva/编程资料/deeplearning/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt',
                                 transform=transfroms.ToTensor(),
                                 target_transform=lambda x: torch.tensor(x))
     newImgNameLst=['a','b','c','d','e']
-    for my_format in [48,24,12]:
+    for my_format in [12]: # 48,24,
         for i, sample in enumerate(dataset):
             try:
             
@@ -102,15 +106,15 @@ if __name__ == '__main__':
                     #对下面操作执行多次，产生多张图片
                     j=0
                     bigsize=0
-                    while j<1:
+                    while j<5:
                         bigsize=bigsize+1
-                        if bigsize>1000: # 重复1000次，仍然没有匹配认为匹配不了
+                        if bigsize>10: # 重复1000次，仍然没有匹配认为匹配不了
                             j=j+1
                         size = npr.randint(int(min(w, h) * 0.8), np.ceil(1.25 * max(w, h))) 
-                        # delta_x = npr.randint(-w * 0.2, w * 0.2)
-                        # delta_y = npr.randint(-h * 0.2, h * 0.2)    
-                        delta_x = npr.randint(-w * 0.4, w * 0.4)
-                        delta_y = npr.randint(-h * 0.4, h * 0.4) 
+                        delta_x = npr.randint(-w * 0.2, w * 0.2)
+                        delta_y = npr.randint(-h * 0.2, h * 0.2)    
+                        # delta_x = npr.randint(-w * 0.4, w * 0.4)
+                        # delta_y = npr.randint(-h * 0.4, h * 0.4) 
                         min_delta=min(delta_y,delta_x)
                         nx1 = int(max(x1 + w / 2 + min_delta - size / 2, 0))
                         ny1 = int(max(y1 + h / 2 + min_delta - size / 2, 0))
@@ -135,17 +139,19 @@ if __name__ == '__main__':
                         #分别执行，1.从原图抠图 2.保存不同尺寸图片 3.保存坐标文件
                         imgPath2=''
                         confidence=0
-                        if iouValue>0.65:
-                            imgPath2='positive'
-                            confidence=MyEnum.positive.value
-                        elif iouValue<0.3:
-                            imgPath2='negative'
-                            confidence=MyEnum.negative.value
-                        # elif iouValue>0.4 or iouValue<0.65:
-                        #     imgPath2='part'
-                        #     confidence=MyEnum.part.value
+                        # if iouValue>0.65:
+                        #     imgPath2='positive'
+                        #     confidence=MyEnum.positive.value
+                        # el
+                        # if iouValue<0.3:
+                        #     imgPath2='negative'
+                        #     confidence=MyEnum.negative.value
+                        # el
+                        if iouValue>0.4 or iouValue<0.65:
+                            imgPath2='part'
+                            confidence=MyEnum.part.value
                         if imgPath2:
-                            newImgName='v'+"-"+str(s)+"-"+str(j)+"-"+image_name_detail
+                            newImgName='b'+"-"+str(s)+"-"+str(j)+"-"+image_name_detail
                             if imgPath2=='negative':
                                 offset=(newImgName,confidence,0,0,0,0)
                             else:

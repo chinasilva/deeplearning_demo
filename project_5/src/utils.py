@@ -85,7 +85,7 @@ def processImage(newImgName,imgName,imagePath,saveImgPath,imgPath2,saveTagPath,o
     '''
     try:
         newTagLst=[]
-        with Image.open(os.path.join(imagePath,imgName)) as img:
+        with Image.open(os.path.join(imagePath)) as img:
             img1=img.crop(newImgPosition)
             img1=img1.resize((outImgSize,outImgSize))
             savePath=saveImgPath+"/"+str(outImgSize)+"/"+imgPath2+"/"
@@ -219,7 +219,25 @@ def iou(box, boxes, isMin = False):
         ovr = np.true_divide(inter, np.minimum(box_area, area))
     else:
         ovr = np.true_divide(inter, (box_area + area - inter))
+    return ovr
 
+def iouSpecial(box, boxes, isMin = False):
+    box_area = (box[2] - box[0]) * (box[3] - box[1])
+    area = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    xx1 = np.maximum(box[0], boxes[:, 0])
+    yy1 = np.maximum(box[1], boxes[:, 1])
+    xx2 = np.minimum(box[2], boxes[:, 2])
+    yy2 = np.minimum(box[3], boxes[:, 3])
+
+    w = np.maximum(0, xx2 - xx1)
+    h = np.maximum(0, yy2 - yy1)
+
+    inter = w * h
+    if isMin:
+        ovr = np.true_divide(inter, np.minimum(box_area, area))
+    else:
+        ovr = np.true_divide(inter, (box_area + area - inter))
+        np.where(ovr==1)
     return ovr
     
 def deviceFun():
@@ -240,8 +258,8 @@ def convertToPosition(originPosition):
     #按照最长边进行抠图，短边进行补全
     newImg[:,0]=originPosition[:,0]+originImgW*0.5-maxSide*0.5
     newImg[:,1]=originPosition[:,1]+originImgH*0.5-maxSide*0.5
-    newImg[:,2]=originPosition[:,2]+maxSide # *0.5-originImgW*0.5
-    newImg[:,3]=originPosition[:,3]+maxSide # *0.5-originImgH*0.5
+    newImg[:,2]=originPosition[:,0]+maxSide # *0.5-originImgW*0.5
+    newImg[:,3]=originPosition[:,1]+maxSide # *0.5-originImgH*0.5
     newImg[:,4]=originPosition[:,4]
     return newImg
 

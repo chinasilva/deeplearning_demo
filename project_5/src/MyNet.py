@@ -14,18 +14,24 @@ class PNet(nn.Module):
             nn.PReLU()
             # nn.Conv2d(in_channels=32,out_channels=32,kernel_size=1),
         )
-        self.outputClass=nn.Conv2d(in_channels=32,out_channels=1,kernel_size=1)
+        self.outputClassMethod=nn.Conv2d(in_channels=32,out_channels=1,kernel_size=1)
         self.sigmod=nn.Sigmoid()
-        self.boundingbox=nn.Conv2d(in_channels=32,out_channels=4,kernel_size=1)
-        self.landmark=nn.Conv2d(in_channels=32,out_channels=10,kernel_size=1)
+        self.boundingboxMethod=nn.Conv2d(in_channels=32,out_channels=4,kernel_size=1)
+        self.landmarkMethod=nn.Conv2d(in_channels=32,out_channels=10,kernel_size=1)
+        self.iouClassMethod=nn.Conv2d(in_channels=32,out_channels=1,kernel_size=1)
+        self.sigmod2=nn.Sigmoid()
+
 
     def forward(self,input):
         y= self.PNet(input)
-        outputClass=self.outputClass(y)
+        outputClass=self.outputClassMethod(y)
         outputClass=self.sigmod(outputClass)
-        boundingbox=self.boundingbox(y)
-        landmark=self.landmark(y)
-        return outputClass,boundingbox,landmark
+        boundingbox=self.boundingboxMethod(y)
+        landmark=self.landmarkMethod(y)
+        iou=self.iouClassMethod(y)
+        iou=self.sigmod(iou)
+
+        return outputClass,boundingbox,landmark,iou
 
 class RNet(nn.Module):
     def __init__(self):
@@ -40,20 +46,24 @@ class RNet(nn.Module):
             nn.Conv2d(in_channels=48,out_channels=64,kernel_size=2),
         )
         self.line=nn.Linear(in_features=256,out_features=128)
-        self.classification=nn.Linear(in_features=128,out_features=1)
+        self.outputClassMethod=nn.Linear(in_features=128,out_features=1)
         self.sigmod=nn.Sigmoid()
-        self.boundingbox=nn.Linear(in_features=128,out_features=4)
-        self.landmark=nn.Linear(in_features=128,out_features=10)
+        self.boundingboxMethod=nn.Linear(in_features=128,out_features=4)
+        self.landmarkMethod=nn.Linear(in_features=128,out_features=10)
+        self.iouClassMethod=nn.Linear(in_features=128,out_features=1)
+        self.sigmod2=nn.Sigmoid()
 
     def forward(self,input):
         y= self.RNet(input)
         y=y.view(-1,256)
         y=self.line(y)
-        classification=self.classification(y)
+        classification=self.outputClassMethod(y)
         classification=self.sigmod(classification)
-        boundingbox=self.boundingbox(y)
-        landmark=self.landmark(y)
-        return classification,boundingbox,landmark
+        boundingbox=self.boundingboxMethod(y)
+        landmark=self.landmarkMethod(y)
+        iou=self.iouClassMethod(y)
+        iou=self.sigmod(iou)
+        return classification,boundingbox,landmark,iou
 
 class ONet(nn.Module):
     def __init__(self):
@@ -72,27 +82,33 @@ class ONet(nn.Module):
             nn.PReLU()
         )
         self.line=nn.Linear(in_features=512,out_features=256)
-        self.classification=nn.Linear(in_features=256,out_features=1)
+        self.classificationMethod=nn.Linear(in_features=256,out_features=1)
         self.sigmod=nn.Sigmoid()
-        self.boundingbox=nn.Linear(in_features=256,out_features=4)
-        self.landmark=nn.Linear(in_features=256,out_features=10)
+        self.boundingboxMethod=nn.Linear(in_features=256,out_features=4)
+        self.landmarkMethod=nn.Linear(in_features=256,out_features=10)
+        self.iouClassMethod=nn.Linear(in_features=256,out_features=1)
+        self.sigmod2=nn.Sigmoid()
 
     def forward(self,input):
         y= self.ONet(input)
         y=y.view(-1,512)
         y=self.line(y)
-        classification=self.classification(y)
+        classification=self.classificationMethod(y)
         classification=self.sigmod(classification)
-        boundingbox=self.boundingbox(y)
-        landmark=self.landmark(y)
-        return classification,boundingbox,landmark
+        boundingbox=self.boundingboxMethod(y)
+        landmark=self.landmarkMethod(y)
+        iou=self.iouClassMethod(y)
+        iou=self.sigmod(iou)
+        return classification,boundingbox,landmark,iou
 
 
 if __name__ == "__main__":
     # test=torch.Tensor(2,3,24,24)
-    test=torch.Tensor(2,3,100,100)
+    test=torch.Tensor(2,3,48,48)
+    # test=torch.Tensor(2,3,12,12)
     # print(a)
-    p=PNet()
+    # p=PNet()
     # p=RNet()
+    p=ONet()
     a,b,c=p(test)
-    print(a)
+    print(b.size())

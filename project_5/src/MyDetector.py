@@ -67,7 +67,7 @@ class MyDetector():
                 # box=[]
                 imgData=trans.ToTensor()(img2) #- 0.5
                 imgData=imgData.unsqueeze(0).to(self.device)
-                outputClass,outputBox,outputLandMark=self.pnet(imgData)
+                outputClass,outputBox,outputLandMark,outIOU=self.pnet(imgData)
                 outputClassValue,outputBoxValue=outputClass[0][0].cpu().data, outputBox[0].cpu().data
                 outputBoxValue=outputBoxValue.permute(2,1,0)#(w,h,c)
                 tmpClass=outputClassValue.permute(1,0)#(w,h)
@@ -106,9 +106,9 @@ class MyDetector():
                     PLst.extend(boxes)
                     # np.stack(boxes)
 
-            PLst2=nms2(np.array(PLst),thresh=0.5)
+            PLst=nms2(np.array(PLst),thresh=0.5)
             #NMS后对图形做变换，方便传入RNet
-            PLst2=convertToPosition(np.array(PLst2))
+            PLst2=convertToPosition(np.array(PLst))
             for p in PLst2:
                 x1,y1,x2,y2=p[0:4]
                 img3=img.crop((x1,y1,x2,y2))
@@ -132,7 +132,7 @@ class MyDetector():
             pos=[]
             # PLst
             # for i,pImg in enumerate(PLst):
-            outputClass,outputBox,outputLandMark=self.rnet(PLst.to(self.device))
+            outputClass,outputBox,outputLandMark,outIOU=self.rnet(PLst.to(self.device))
             w=self.rnetSize
             h=self.rnetSize
             outputClass=outputClass.cpu().data.numpy()
@@ -154,14 +154,15 @@ class MyDetector():
             box=np.stack(box,axis=1).reshape(-1,5)
             
             RLst=nms2(np.array(box),thresh=0.5)#将PNet出来的图片进行下一步操作
-            for r in RLst:
+            RLst2=convertToPosition(np.array(RLst))
+            for r in RLst2:
                 x1,y1,x2,y2=r[0:4]
                 img2=img.crop((x1,y1,x2,y2))
                 # 将RNet对应的框图形状变换成ONet需要的24*24，
                 img2=img2.resize((self.onetSize,self.onetSize))
-                imageData=trans.ToTensor()(img2)- 0.5
+                imageData=trans.ToTensor()(img2)
                 outLst.append(imageData)
-                outLst2.append(r)
+                outLst2.append([x1,y1,x2,y2])
             outLst2= np.array(outLst2)
             if len(outLst)==0:
                 return [],[]
@@ -174,7 +175,7 @@ class MyDetector():
             pos=[]
             w=self.onetSize
             h=self.onetSize
-            outputClass,outputBox,outputLandMark=self.onet(RLst.to(self.device))
+            outputClass,outputBox,outputLandMark,outIOU=self.onet(RLst.to(self.device))
             outputClass=outputClass.cpu().data.numpy()
             outputBox=outputBox.cpu().data.numpy()
 
