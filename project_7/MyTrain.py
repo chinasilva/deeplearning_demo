@@ -1,3 +1,4 @@
+# %%writefile /content/deeplearning_homework/project_7/MyTrain.py
 import numpy as np
 import torch
 import torch.nn as nn
@@ -8,16 +9,17 @@ import torch.nn.functional as F
 import os
 from MyNet import VGGNet
 
+# modelPath='/content/deeplearning_homework/project_7/model/net.pth'
+# datasetsPath='/content/deeplearning_homework/project_7/datasets'
 modelPath='/home/chinasilva/code/deeplearning_homework/project_7/models/net.pth'
-datasetsPath='/home/chinasilva/code/deeplearning_homework/project_7/'
+datasetsPath='/home/chinasilva/code/deeplearning_homework/project_7/datasets'
 def device_fun():
     device=torch.device("cuda:0" if torch.cuda.is_available() else"cpu")
-    print(device)
     return device
 
 def main():
     epochs = 1000
-    batch_size = 6400
+    batch_size = 512
 
     if os.path.exists(modelPath):
         net=torch.load(modelPath)
@@ -38,12 +40,12 @@ def main():
         transforms.Normalize((0.5,), (0.5,)),
     ])
     dataset = datasets.MNIST(datasetsPath, train=True,
-                             download=False, transform=transform)
+                             download=True, transform=transform)
     dataloader = torch.utils.data.DataLoader(
         dataset, batch_size=batch_size, shuffle=True)
 
     testdataset = datasets.MNIST(
-        "datasets/", train=False, download=True, transform=transform)
+        datasetsPath, train=False, download=True, transform=transform)
     testdataloader = torch.utils.data.DataLoader(
         testdataset, batch_size=batch_size, shuffle=False)
  
@@ -54,11 +56,23 @@ def main():
         # scheduler.step()
         for j, (input, target) in enumerate(dataloader):
             input=input.to(device)
-
+            
+            
             features,output = net(input)
+            print("features:",features.size())
+            features2=features.cpu().data
+            plt.clf()#清空内容
+
+            # x = features2[:,0] 
+            # y = features2[:,1]  
+            # plt.scatter(x, y, alpha=0.6)  # 绘制散点图，透明度为0.6（这样颜色浅一点，比较好看）
+            # plt.pause(0.5)
+            # # plt.show()
+
+
             output = output.to(device)
             target=target.to(device)
-
+          
             loss = net.getloss(outputs=output,features=features,labels=target)
 
             optimizer.zero_grad()
@@ -77,8 +91,8 @@ def main():
                 input=input.to(device)    # GPU 
                 target=target.to(device) # GPU
 
-                output = net(input)
-                
+                features,output = net(input)
+                print("features:",features.size())
 
                 _, predicted = torch.max(output.data, 1)
                 total += target.size(0)
@@ -92,29 +106,37 @@ def main():
         # plt.clf()#清空内容
         # losses=list(filter(lambda x: x<1.7,losses)) #过滤部分损失，使图象更直观
         
-        x=range(len(losses)*(i),len(losses)*(i+1))
-        plt.subplot(2, 1, 1)
-        plt.plot(x,losses)
-        plt.pause(0.5)
-        plt.ylabel('Test losses')
+        # x=range(len(losses)*(i),len(losses)*(i+1))
+        # plt.subplot(2, 1, 1)
+        # plt.plot(x,losses)
+        # plt.pause(0.5)
+        # plt.ylabel('Test losses')
 
-        x2=range(len(accuracyLst)*(i),len(accuracyLst)*(i+1))
-        # x2=range(0,len(accuracyLst))
-        plt.subplot(2, 1, 2)
-        plt.plot(x2,accuracyLst)
-        plt.pause(0.5)
-        plt.ylabel('Test accuracy')
+        # x2=range(len(accuracyLst)*(i),len(accuracyLst)*(i+1))
+        # # x2=range(0,len(accuracyLst))
+        # plt.subplot(2, 1, 2)
+        # plt.plot(x2,accuracyLst)
+        # plt.pause(0.5)
+        # plt.ylabel('Test accuracy')
 
         accuracyLst=[]
         losses=[]
 
-    torch.save(modelPath)
+        torch.save(net,modelPath)
 
     
     plt.savefig("accuracy_loss.jpg")
     plt.ioff() # 画动态图
     plt.show() # 保留最后一张，程序结束后不关闭
 
+def onlineHardSampleMining(self,loss,output,hardRate):
+    '''
+    困难样本训练
+    '''
+    outLen=int((output.size()[0]*hardRate))
+    loss=loss[:][torch.argsort(loss[:,0],dim=0,descending=True)] #进行困难样本训练
+    loss=torch.mean(loss[0:outLen+1])
+    return loss
 
 if __name__ == "__main__":
     main()    
