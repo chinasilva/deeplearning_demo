@@ -13,6 +13,10 @@ from MyNet import VGGNet
 # datasetsPath='/content/deeplearning_homework/project_7/datasets'
 modelPath='/home/chinasilva/code/deeplearning_homework/project_7/models/net.pth'
 datasetsPath='/home/chinasilva/code/deeplearning_homework/project_7/datasets'
+
+color=['blue','orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']
+tag=[0,1,2,3,4,5,6,7,8,9]
+
 def device_fun():
     device=torch.device("cuda:0" if torch.cuda.is_available() else"cpu")
     return device
@@ -59,26 +63,29 @@ def main():
             
             
             features,output = net(input)
-            print("features:",features.size())
             features2=features.cpu().data
             plt.clf()#清空内容
 
             # x = features2[:,0] 
             # y = features2[:,1]  
-            # plt.scatter(x, y, alpha=0.6)  # 绘制散点图，透明度为0.6（这样颜色浅一点，比较好看）
-            # plt.pause(0.5)
-            # # plt.show()
-
-
+            
+            # plt.show()
             output = output.to(device)
             target=target.to(device)
-          
             loss = net.getloss(outputs=output,features=features,labels=target)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            
             if j % 10 == 0:
+                for i in range(int(target.size()[0])):
+                    value=target[i]
+                    x=features2[i,0]
+                    y=features2[i,1]
+                    c=color[value]
+                    plt.scatter(x, y,c=c, alpha=0.6)  # 绘制散点图，透明度为0.6（这样颜色浅一点，比较好看）
+                plt.pause(0.1)
                 print("[epochs - {0} - {1}/{2}]loss: {3}".format(i,
                                                                  j, len(dataloader), loss.float()))
             if j % 100 == 0:
