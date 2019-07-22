@@ -14,6 +14,7 @@ class PNet(nn.Module):
             nn.PReLU()
             # nn.Conv2d(in_channels=32,out_channels=32,kernel_size=1),
         )
+        self.myCenterLossLayer=nn.Conv2d(in_channels=32,out_channels=32,kernel_size=1)
         self.outputClassMethod=nn.Conv2d(in_channels=32,out_channels=1,kernel_size=1)
         self.sigmod=nn.Sigmoid()
         self.boundingboxMethod=nn.Conv2d(in_channels=32,out_channels=4,kernel_size=1)
@@ -24,14 +25,15 @@ class PNet(nn.Module):
 
     def forward(self,input):
         y= self.PNet(input)
-        outputClass=self.outputClassMethod(y)
+        feature=self.myCenterLossLayer(y)
+        outputClass=self.outputClassMethod(feature)
         outputClass=self.sigmod(outputClass)
-        boundingbox=self.boundingboxMethod(y)
+        boundingbox=self.boundingboxMethod(feature)
         landmark=self.landmarkMethod(y)
-        iou=self.iouClassMethod(y)
+        iou=self.iouClassMethod(feature)
         iou=self.sigmod(iou)
 
-        return outputClass,boundingbox,landmark,iou
+        return outputClass,boundingbox,landmark,iou,feature
 
 class RNet(nn.Module):
     def __init__(self):
@@ -45,6 +47,7 @@ class RNet(nn.Module):
             nn.MaxPool2d(kernel_size=3,stride=2),
             nn.Conv2d(in_channels=48,out_channels=64,kernel_size=2),
         )
+        self.myCenterLossLayer=nn.Conv2d(in_channels=32,out_channels=32,kernel_size=1)
         self.line=nn.Linear(in_features=256,out_features=128)
         self.outputClassMethod=nn.Linear(in_features=128,out_features=1)
         self.sigmod=nn.Sigmoid()
@@ -101,14 +104,30 @@ class ONet(nn.Module):
         iou=self.sigmod(iou)
         return classification,boundingbox,landmark,iou
 
+class CenterLoss(nn.Module):
+
+    def __init__(self, cls_num, feature_num):
+        super(CenterLoss, self).__init__()
+
+        self.cls_num = cls_num
+        self.center = nn.Parameter(torch.randn(cls_num, feature_num))
+
+    def forward(self, xs, ys):
+        xs = torch.nn.functional.normalize(xs)
+        center_exp = self.center.index_select(dim=0, index=ys.long())
+        count = torch.histc(ys, bins=self.cls_num, min=0, max=self.cls_num - 1)
+        count_dis = count.index_select(dim=0, index=ys.long())
+        return torch.mean(torch.sqrt(torch.sum((xs - center_exp.float()) ** 2, dim=1)) / count_dis.float())
+
+
 
 if __name__ == "__main__":
     # test=torch.Tensor(2,3,24,24)
-    test=torch.Tensor(2,3,48,48)
-    # test=torch.Tensor(2,3,12,12)
+    # test=torch.Tensor(2,3,48,48)
+    test=torch.Tensor(2,3,12,12)
     # print(a)
-    # p=PNet()
+    p=PNet()
     # p=RNet()
-    p=ONet()
-    a,b,c=p(test)
-    print(b.size())
+    # p=ONet()
+    a,b,c,d,e=p(test)
+    print(e.size())
