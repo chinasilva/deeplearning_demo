@@ -53,8 +53,8 @@ class MyTrain():
         # self.optimizer=torch.optim.SGD(self.net.parameters(), lr=0.001)
         
     def train(self):
-        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,drop_last=True,num_workers=48) #
-        testData=data.DataLoader(self.testData,batch_size=self.batchSize,shuffle=True)
+        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,drop_last=True,num_workers=8) #
+        testData=data.DataLoader(self.testData,batch_size=self.batchSize,shuffle=True,num_workers=4)
         losslst=[]
         retLayer=ArcMarginProduct(32,2)
         testlosses=[]
@@ -224,19 +224,14 @@ class MyTrain():
         losses2:Train
         '''
         # losses=list(filter(lambda x: x<0.3,losses)) #过滤部分损失，使图象更直观
-        
         x=range(len(losses)*(i+1),len(losses)*(i+2))
-        # print("x:",x)
         x2=range(len(losses2)*(i+1),len(losses2)*(i+2))
-        # x=range(i,i+1)
-        # print("x2:",x)
-        # x2=range(i,i+1)
 
         # plt.subplot(2, 1, 1)
         plt.plot(losses,label = "test",color='cyan')
         plt.plot(losses2,label = "train",color='black')
-        plt.pause(0.5)
         plt.ylabel('Test losses')
+        plt.savefig("loss.jpg")
 
         # x2=range(len(losses2)*(i),len(losses2)*(i+1))
         # plt.subplot(2, 1, 2)
