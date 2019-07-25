@@ -54,7 +54,6 @@ class MyDetector():
         '''
         PLst=[] #从PNet返回找到人脸的框
         scaleRate=0.707
-        # imgDatas=trans.ToTensor()(imgLst)- 0.5
         with torch.no_grad():
             outLst=[]
             outLst2=[]
@@ -65,9 +64,9 @@ class MyDetector():
             side=min(h,w)
             while side>=self.pnetSize: #缩放至跟PNet建议框同样大小即可
                 # box=[]
-                imgData=trans.ToTensor()(img2) #- 0.5
+                imgData=trans.ToTensor()(img2)- 0.5
                 imgData=imgData.unsqueeze(0).to(self.device)
-                outputClass,outputBox,outputLandMark,outIOU=self.pnet(imgData)
+                outputClass,outputBox,outputLandMark,outIOU,centerLoss=self.pnet(imgData)
                 outputClassValue,outputBoxValue=outputClass[0][0].cpu().data, outputBox[0].cpu().data
                 outputBoxValue=outputBoxValue.permute(2,1,0)#(w,h,c)
                 tmpClass=outputClassValue.permute(1,0)#(w,h)
@@ -89,10 +88,8 @@ class MyDetector():
                 x2 = x2 - ow * offset[:,2]
                 y2 = y2 - oh * offset[:,3]
                 box=[x1, y1, x2, y2, conf]
-                # box=[x1.int(), y1.int(), x2.int(), y2.int(), tmpClass]
                 scale=scale * scaleRate 
                 side=side * scaleRate #让面积每次缩放1/2，则边长缩放比例为(2**0.5)/2
-
                 h2= int(h*scale)
                 w2= int(w*scale)
 
@@ -100,13 +97,14 @@ class MyDetector():
 
             
                 boxes=torch.stack(box,dim=1).view(-1,5)
-                # keep=nms(np.array(box),overlap_threshold=0.5)#将PNet出来的图片进行下一步操作
-                boxes=nms2(np.array(boxes),thresh=0.5)#将PNet出来的图片进行下一步操作
+                boxes=np.array(boxes)
+                # boxes=nms2(np.array(boxes),thresh=0.3)#将PNet出来的图片进行下一步操作
                 if len(boxes)>0:
                     PLst.extend(boxes)
                     # np.stack(boxes)
 
-            PLst=nms2(np.array(PLst),thresh=0.5)
+            PLst=nms2(np.array(PLst),thresh=0.3)
+            # PLst=np.array(PLst)
             #NMS后对图形做变换，方便传入RNet
             PLst2=convertToPosition(np.array(PLst))
             for p in PLst2:
@@ -114,7 +112,7 @@ class MyDetector():
                 img3=img.crop((x1,y1,x2,y2))
                 # img3=img.crop((y1,x1,y2,x2))
                 img3=img3.resize((self.rnetSize,self.rnetSize))
-                imageData=trans.ToTensor()(img3) #- 0.5
+                imageData=trans.ToTensor()(img3) - 0.5
                 # 将Pnet对应的框图形状变换成RNet需要的24*24，
                 outLst.append(imageData)
                 outLst2.append([x1,y1,x2,y2]) 
@@ -132,7 +130,7 @@ class MyDetector():
             pos=[]
             # PLst
             # for i,pImg in enumerate(PLst):
-            outputClass,outputBox,outputLandMark,outIOU=self.rnet(PLst.to(self.device))
+            outputClass,outputBox,outputLandMark,outIOU,centerLoss=self.rnet(PLst.to(self.device))
             w=self.rnetSize
             h=self.rnetSize
             outputClass=outputClass.cpu().data.numpy()
@@ -158,9 +156,9 @@ class MyDetector():
             for r in RLst2:
                 x1,y1,x2,y2=r[0:4]
                 img2=img.crop((x1,y1,x2,y2))
-                # 将RNet对应的框图形状变换成ONet需要的24*24，
+                # 将RNet对应的框图形状变换成ONet需要的48*48
                 img2=img2.resize((self.onetSize,self.onetSize))
-                imageData=trans.ToTensor()(img2)
+                imageData=trans.ToTensor()(img2)-0.5
                 outLst.append(imageData)
                 outLst2.append([x1,y1,x2,y2])
             outLst2= np.array(outLst2)
@@ -175,7 +173,7 @@ class MyDetector():
             pos=[]
             w=self.onetSize
             h=self.onetSize
-            outputClass,outputBox,outputLandMark,outIOU=self.onet(RLst.to(self.device))
+            outputClass,outputBox,outputLandMark,outIOU,centerLoss=self.onet(RLst.to(self.device))
             outputClass=outputClass.cpu().data.numpy()
             outputBox=outputBox.cpu().data.numpy()
 
@@ -209,7 +207,7 @@ class MyDetector():
                     y1=out[1]
                     x2=out[2]
                     y2=out[3]
-                    draw_0 = cv2.rectangle(img2, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    draw_0 = cv2.rectangle(img2, (x1, y1), (x2, y2), (0, 255, 0), 1)
             cv2.putText(img2,text,(50,150),cv2.FONT_HERSHEY_COMPLEX,2,(0,0,255),5)
             cv2.imshow('image',img2)
             cv2.waitKey(0)

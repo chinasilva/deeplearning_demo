@@ -1,5 +1,11 @@
 import torch
 import torch.nn as nn
+from torch.nn import functional as F
+
+def device_fun():
+    device=torch.device("cuda:0" if torch.cuda.is_available() else"cpu")
+    return device
+device=device_fun()
 
 class PNet(nn.Module):
     def __init__(self):
@@ -47,8 +53,8 @@ class RNet(nn.Module):
             nn.MaxPool2d(kernel_size=3,stride=2),
             nn.Conv2d(in_channels=48,out_channels=64,kernel_size=2),
         )
-        self.myCenterLossLayer=nn.Conv2d(in_channels=32,out_channels=32,kernel_size=1)
         self.line=nn.Linear(in_features=256,out_features=128)
+        self.myCenterLossLayer=nn.Linear(in_features=128,out_features=128)
         self.outputClassMethod=nn.Linear(in_features=128,out_features=1)
         self.sigmod=nn.Sigmoid()
         self.boundingboxMethod=nn.Linear(in_features=128,out_features=4)
@@ -60,13 +66,14 @@ class RNet(nn.Module):
         y= self.RNet(input)
         y=y.view(-1,256)
         y=self.line(y)
-        classification=self.outputClassMethod(y)
+        feature=self.myCenterLossLayer(y)
+        classification=self.outputClassMethod(feature)
         classification=self.sigmod(classification)
-        boundingbox=self.boundingboxMethod(y)
-        landmark=self.landmarkMethod(y)
-        iou=self.iouClassMethod(y)
+        boundingbox=self.boundingboxMethod(feature)
+        landmark=self.landmarkMethod(feature)
+        iou=self.iouClassMethod(feature)
         iou=self.sigmod(iou)
-        return classification,boundingbox,landmark,iou
+        return classification,boundingbox,landmark,iou,feature
 
 class ONet(nn.Module):
     def __init__(self):
@@ -85,6 +92,7 @@ class ONet(nn.Module):
             nn.PReLU()
         )
         self.line=nn.Linear(in_features=512,out_features=256)
+        self.myCenterLossLayer=nn.Linear(in_features=256,out_features=256)
         self.classificationMethod=nn.Linear(in_features=256,out_features=1)
         self.sigmod=nn.Sigmoid()
         self.boundingboxMethod=nn.Linear(in_features=256,out_features=4)
@@ -96,13 +104,14 @@ class ONet(nn.Module):
         y= self.ONet(input)
         y=y.view(-1,512)
         y=self.line(y)
-        classification=self.classificationMethod(y)
+        feature=self.myCenterLossLayer(y)
+        classification=self.classificationMethod(feature)
         classification=self.sigmod(classification)
-        boundingbox=self.boundingboxMethod(y)
-        landmark=self.landmarkMethod(y)
-        iou=self.iouClassMethod(y)
+        boundingbox=self.boundingboxMethod(feature)
+        landmark=self.landmarkMethod(feature)
+        iou=self.iouClassMethod(feature)
         iou=self.sigmod(iou)
-        return classification,boundingbox,landmark,iou
+        return classification,boundingbox,landmark,iou,feature
 
 class CenterLoss(nn.Module):
 
@@ -110,14 +119,14 @@ class CenterLoss(nn.Module):
         super(CenterLoss, self).__init__()
 
         self.cls_num = cls_num
-        self.center = nn.Parameter(torch.randn(cls_num, feature_num))
+        self.center = nn.Parameter(torch.randn(cls_num, feature_num).to(device))
 
     def forward(self, xs, ys):
         xs = torch.nn.functional.normalize(xs)
         center_exp = self.center.index_select(dim=0, index=ys.long())
         count = torch.histc(ys, bins=self.cls_num, min=0, max=self.cls_num - 1)
         count_dis = count.index_select(dim=0, index=ys.long())
-        return torch.mean(torch.sqrt(torch.sum((xs - center_exp.float()) ** 2, dim=1)) / count_dis.float())
+        return torch.sum(torch.sqrt(torch.sum((xs - center_exp.float()) ** 2, dim=1)) / count_dis.float())
 
 
 

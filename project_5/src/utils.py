@@ -252,14 +252,14 @@ def convertToPosition(originPosition):
     newImg=originPosition.copy()
     if len(originPosition) == 0:
         return []
-    originImgW=np.int16(originPosition[:,2]-originPosition[:,0])
-    originImgH=np.int16(originPosition[:,3]-originPosition[:,1])
+    originImgW=originPosition[:,2]-originPosition[:,0]
+    originImgH=originPosition[:,3]-originPosition[:,1]
     maxSide=np.maximum(originImgW,originImgH) #获取最长边max(originImgW,originImgH)
     #按照最长边进行抠图，短边进行补全
     newImg[:,0]=originPosition[:,0]+originImgW*0.5-maxSide*0.5
     newImg[:,1]=originPosition[:,1]+originImgH*0.5-maxSide*0.5
-    newImg[:,2]=originPosition[:,0]+maxSide # *0.5-originImgW*0.5
-    newImg[:,3]=originPosition[:,1]+maxSide # *0.5-originImgH*0.5
+    newImg[:,2]=newImg[:,0]+maxSide 
+    newImg[:,3]=newImg[:,1]+maxSide 
     newImg[:,4]=originPosition[:,4]
     return newImg
 

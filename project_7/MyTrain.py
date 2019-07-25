@@ -7,7 +7,7 @@ from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import os
-from MyNet import VGGNet
+from MyNet import VGGNet,CenterLoss
 
 # modelPath='/content/deeplearning_homework/project_7/model/net.pth'
 # datasetsPath='/content/deeplearning_homework/project_7/datasets'
@@ -35,8 +35,11 @@ def main():
 
     #调用cuda
     net.to(device)
+    criterion_loss_layer = nn.CrossEntropyLoss()
+    center_loss_layer = CenterLoss(10, 2)
 
     optimizer = optim.Adam(net.parameters())
+    optimizer2 = optim.SGD(center_loss_layer.parameters(),lr=0.5)
 
     transform = transforms.Compose([
         transforms.Resize(28),
@@ -61,30 +64,30 @@ def main():
         for j, (input, target) in enumerate(dataloader):
             input=input.to(device)
             
-            
             features,output = net(input)
-            features2=features.cpu().data
-            plt.clf()#清空内容
-
-            # x = features2[:,0] 
-            # y = features2[:,1]  
-            
-            # plt.show()
             output = output.to(device)
             target=target.to(device)
-            loss = net.getloss(outputs=output,features=features,labels=target)
 
+            loss_cls = criterion_loss_layer(output, target)
+            loss_center = center_loss_layer(features, target)
+            loss = loss_cls + loss_center
+
+            features2=features.cpu().data
+            
             optimizer.zero_grad()
+            optimizer2.zero_grad()
             loss.backward()
             optimizer.step()
-            
+            optimizer2.step()
+
+            plt.clf()#清空内容
             if j % 10 == 0:
                 for i in range(int(target.size()[0])):
                     value=target[i]
                     x=features2[i,0]
                     y=features2[i,1]
                     c=color[value]
-                    plt.scatter(x, y,c=c, alpha=0.6)  # 绘制散点图，透明度为0.6（这样颜色浅一点，比较好看）
+                    plt.scatter(x, y,c=c, alpha=0.6,marker=".")  # 绘制散点图，透明度为0.6（这样颜色浅一点，比较好看）
                 plt.pause(0.1)
                 print("[epochs - {0} - {1}/{2}]loss: {3}".format(i,
                                                                  j, len(dataloader), loss.float()))

@@ -9,7 +9,10 @@ cfg = {
     'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
     'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
 }
-
+def device_fun():
+    device=torch.device("cuda:0" if torch.cuda.is_available() else"cpu")
+    return device
+device=device_fun()
 
 class VGGNet(nn.Module):
     
@@ -19,8 +22,7 @@ class VGGNet(nn.Module):
         self.classifier0 = nn.Linear(512, 10)
         self.classifier1 = nn.Linear(10, 2)
         self.classifier2 = nn.Linear(2, 10)
-        self.center_loss_layer = CenterLoss(10, 2)
-        self.crossEntropy = nn.CrossEntropyLoss()
+
 
     def forward(self, x):
         out = self.layers(x)
@@ -44,26 +46,20 @@ class VGGNet(nn.Module):
         layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
         return nn.Sequential(*layers)
 
-    def getloss(self, outputs, features, labels):
-        loss_cls = self.crossEntropy(outputs, labels)
-        loss_center = self.center_loss_layer(features, labels)
-        loss = loss_cls + (0.01/2)*loss_center
-        return loss
+    
 
-class CenterLoss(nn.Module):
+class CenterLoss(torch.nn.Module):
 
     def __init__(self, cls_num, feature_num):
         super(CenterLoss, self).__init__()
 
         self.cls_num = cls_num
-        self.center = nn.Parameter(torch.randn(cls_num, feature_num))
+        self.center = nn.Parameter(torch.randn(cls_num, feature_num).to(device))
 
     def forward(self, xs, ys):
         xs = torch.nn.functional.normalize(xs)
         center_exp = self.center.index_select(dim=0, index=ys.long())
         count = torch.histc(ys, bins=self.cls_num, min=0, max=self.cls_num - 1)
         count_dis = count.index_select(dim=0, index=ys.long())
-        return torch.sum(torch.sqrt(torch.sum((xs - center_exp.float()) ** 2, dim=1)) / count_dis.float())
-
-
+        return torch.sum(torch.sqrt(torch.sum((xs - center_exp) ** 2, dim=1)) / count_dis.float())
 
