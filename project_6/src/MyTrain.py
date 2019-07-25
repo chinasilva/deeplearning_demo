@@ -18,7 +18,7 @@ class MyTrain():
         self.myData=MyData()
         self.modelLoction=MODEL_PATH
         self.lossFun=nn.MSELoss()
-        self.net=MyNet()
+        self.net=MyNet().to(self.device)
         if os.path.exists(self.modelLoction):
             self.net=torch.load(self.modelLoction)
         self.optimizer=torch.optim.Adam(self.net.parameters())
@@ -28,6 +28,11 @@ class MyTrain():
         output=output.reshape(output.size(0),output.size(1),output.size(2),3,-1) #(n,h,w,3,c)
         index=target[...,0]>0
         index2=target[...,0]==0
+        print("output:",output.size())
+        print("target:",target.size())
+        print("output2:",output[index].size())
+        print("target2:",target[index].size())
+        
         loss1=self.lossFun(output[index],target[index]) 
         loss2=self.lossFun(output[index2],target[index2]) 
         loss=alpha*loss1+(1-alpha)*loss2
@@ -39,11 +44,13 @@ class MyTrain():
             print("epoch:",i)
             try:
                 for j,(target13,target26,target52,img) in enumerate(trainData):
+           
                     a=datetime.now()
-                    o13,o26,o52=self.net(img).to(self.device)
-                    loss1=self.myLoss(o13,target13,0.9)                    
-                    loss2=self.myLoss(o26,target26,0.9)                    
-                    loss3=self.myLoss(o52,target52,0.9)                    
+                    o13,o26,o52=self.net(img.to(self.device))
+
+                    loss1=self.myLoss(o13,target13.float().to(self.device),0.9)                    
+                    loss2=self.myLoss(o26,target26.float().to(self.device),0.9)                    
+                    loss3=self.myLoss(o52,target52.float().to(self.device),0.9)                    
                     loss=loss1+loss2+loss3
 
                     self.optimizer.zero_grad()
@@ -58,7 +65,7 @@ class MyTrain():
                 print("train",str(e))
   
 if __name__ == "__main__":
-    myTrain=MyTrain(batchSize=10,epoch=1000)
+    myTrain=MyTrain(batchSize=5,epoch=5)
     myTrain.train()
 
     
