@@ -36,57 +36,55 @@ class MyData():
             imgInfo=self.dataset[index]
             imgName=imgInfo[0]
             imgData= Image.open(os.path.join(self.imgPath,imgName))
+            imgData=trans.Resize((IMG_WIDTH,IMG_HEIGHT))(imgData)
             imgData2=trans.ToTensor()(imgData)- 0.5
             
             
             boxes=np.array([float(i) for i in imgInfo[1:]])
             boxes2=np.split(boxes,len(boxes)//5) #标签为多分类，产生多个标记框
-            outLst2=np.array(boxes2)[:,1:5]
+            # outLst2=np.array(boxes2)[:,1:5]
+            # w_scale, h_scale = imgData.size[0] / IMG_WIDTH, imgData.size[1] / IMG_HEIGHT
+            # cx=outLst2[:,0]*w_scale
+            # cy=outLst2[:,1]*h_scale
+            # w=outLst2[:,2]*w_scale
+            # h=outLst2[:,3]*h_scale
+            # x=cx-0.5*w
+            # y=cy-0.5*h
+            # outLst2[:,0]=x
+            # outLst2[:,1]=y
+            # outLst2[:,2]=w
+            # outLst2[:,3]=h
+            # screenImgTest(testImagePath=IMG_PATH,outLst2=outLst2,imgName=imgName,text="")
+            for featureSize,anchors in ANCHORS_GROUP.items():
+                #三种不同的特征图，4个偏移量+1个置信度+N个分类
+                lables[featureSize]=np.zeros(shape=(featureSize,featureSize,3, 5+CLASS_NUM))
+                for box in boxes2:
+                    cls,x,y,w,h=box[0:5]
+                    boxArea=w*h
+                    # math.modf
+                    xOffset,xIndex=math.modf(x*featureSize/IMG_WIDTH)
+                    yOffset,yIndex=math.modf(y*featureSize/IMG_HEIGHT)
+                    for i,anchor in enumerate(anchors):
+                        anchorArea=ANCHORS_GROUP_AREA[featureSize][i]
+                        wOffset, hOffset = w / anchor[0], h / anchor[1]
+                        box_area = w * h
 
-            w_scale, h_scale = imgData.size[0] / IMG_WIDTH, imgData.size[1] / IMG_HEIGHT
-            cx=outLst2[:,0]*w_scale
-            cy=outLst2[:,1]*h_scale
-            w=outLst2[:,2]*w_scale
-            h=outLst2[:,3]*h_scale
-            x=cx-0.5*w
-            y=cy-0.5*h
-            outLst2[:,0]=x
-            outLst2[:,1]=y
-            outLst2[:,2]=w
-            outLst2[:,3]=h
-            
-            screenImgTest(testImagePath=IMG_PATH,outLst2=outLst2,imgName=imgName,text="")
+                        # 计算置信度(同心框的IOU(交并))
+                        inter = np.minimum(w, anchor[0]) * np.minimum(h, anchor[1])  # 交集
+                        conf = inter / (box_area + anchorArea - inter)
+                        '''
+                        加log函数方便求梯度
+                        形状为(N,H,W,3,C),相当于增加了一个维度,
+                        其中3相当于在做损失时与3个锚框对应,C维度存放偏移量,iou等数据
+                        *oneHot:从数组中将值取出来
+                        '''
+                        lables[featureSize][int(yIndex),int(xIndex),i]=np.array(
+                            [conf,xOffset,yOffset,np.log(wOffset),np.log(hOffset),*oneHot(CLASS_NUM,int(cls))]
+                        )
 
-            # for featureSize,anchors in cfg.ANCHORS_GROUP.items():
-            #     #三种不同的特征图，4个偏移量+1个置信度+N个分类
-            #     lables[featureSize]=np.zeros(shape=(featureSize,featureSize,3, 5+cfg.CLASS_NUM))
-            #     for box in boxes2:
-            #         cls,x,y,w,h=box[0:5]
-            #         boxArea=w*h
-            #         # math.modf
-            #         xOffset,xIndex=math.modf(x*featureSize/cfg.IMG_WIDTH)
-            #         yOffset,yIndex=math.modf(y*featureSize/cfg.IMG_HEIGHT)
-            #         for i,anchor in enumerate(anchors):
-            #             anchorArea=cfg.ANCHORS_GROUP_AREA[featureSize][i]
-            #             aw,ah=anchor[0:2]
-            #             wOffset=w/aw
-            #             hOffset=h/ah
-            #             iou=min(anchorArea,boxArea)/max(anchorArea,boxArea)
-            #             '''
-            #             加log函数方便求梯度
-            #             形状为(N,H,W,3,C),相当于增加了一个维度,
-            #             其中3相当于在做损失时与3个锚框对应,C维度存放偏移量,iou等数据
-            #             *oneHot:从数组中将值取出来
-            #             '''
-            #             lables[featureSize][int(yIndex),int(xIndex),i]=np.array(
-            #                 [iou,xOffset,yOffset,np.log(wOffset),np.log(hOffset),*oneHot(cfg.CLASS_NUM,int(cls))]
-            #             )
-
-            # return lables[13],lables[26],lables[52],imgData2
+            return lables[13],lables[26],lables[52],imgData2
         except Exception as e:
             print("__getitem__",str(e))
-
-
 
 if __name__ == "__main__":
     
