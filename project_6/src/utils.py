@@ -6,6 +6,7 @@ from PIL import Image,ImageDraw
 import os
 import torch
 import cv2
+from cfg import *
 # %matplotlib inline
 def oneHot(clsNum,v):
     a=np.zeros(clsNum)
@@ -216,7 +217,7 @@ def myRectangle(self,imageInfo,img,imgName):
 
 def screenImgTest(testImagePath,outLst2,imgName,text):
     '''
-    outLst2(x,y,w,h)
+    outLst2(x,y,w,h,"text")
     '''
     img2=cv2.imread(testImagePath+'/'+imgName)
     for out in outLst2.astype(int):
@@ -225,7 +226,9 @@ def screenImgTest(testImagePath,outLst2,imgName,text):
             x2=x1+out[2]
             y2=y1+out[3]
             draw_0 = cv2.rectangle(img2, (x1, y1), (x2, y2), (0, 255, 0), 1)
-    cv2.putText(img2,text,(50,150),cv2.FONT_HERSHEY_COMPLEX,2,(0,0,255),5)
+            if out.size>4:
+                text=COCO_CLASS[out[4]]
+                cv2.putText(img2,text,(x1, y1),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),1)
     cv2.imshow('image',img2)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
