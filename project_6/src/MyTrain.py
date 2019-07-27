@@ -26,7 +26,7 @@ class MyTrain():
     def myLoss(self,output,target,alpha):
         output=output.permute(0,2,3,1) #(n,h,w,c)
         output=output.reshape(output.size(0),output.size(1),output.size(2),3,-1) #(n,h,w,3,c)
-        index=target[...,0]>0
+        index=target[...,0]>0 #置信度大于0和等于0分别求损失
         index2=target[...,0]==0
         print("output:",output.size())
         print("target:",target.size())
@@ -44,11 +44,10 @@ class MyTrain():
             print("epoch:",i)
             try:
                 for j,(target13,target26,target52,img) in enumerate(trainData):
-           
                     a=datetime.now()
                     o13,o26,o52=self.net(img.to(self.device))
 
-                    loss1=self.myLoss(o13,target13.float().to(self.device),0.9)                    
+                    loss1=self.myLoss(o13,target13.float().to(self.device),0.9)
                     loss2=self.myLoss(o26,target26.float().to(self.device),0.9)                    
                     loss3=self.myLoss(o52,target52.float().to(self.device),0.9)                    
                     loss=loss1+loss2+loss3

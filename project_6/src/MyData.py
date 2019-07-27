@@ -42,19 +42,6 @@ class MyData():
             
             boxes=np.array([float(i) for i in imgInfo[1:]])
             boxes2=np.split(boxes,len(boxes)//5) #标签为多分类，产生多个标记框
-            # outLst2=np.array(boxes2)[:,1:5]
-            # w_scale, h_scale = imgData.size[0] / IMG_WIDTH, imgData.size[1] / IMG_HEIGHT
-            # cx=outLst2[:,0]*w_scale
-            # cy=outLst2[:,1]*h_scale
-            # w=outLst2[:,2]*w_scale
-            # h=outLst2[:,3]*h_scale
-            # x=cx-0.5*w
-            # y=cy-0.5*h
-            # outLst2[:,0]=x
-            # outLst2[:,1]=y
-            # outLst2[:,2]=w
-            # outLst2[:,3]=h
-            # screenImgTest(testImagePath=IMG_PATH,outLst2=outLst2,imgName=imgName,text="")
             for featureSize,anchors in ANCHORS_GROUP.items():
                 #三种不同的特征图，4个偏移量+1个置信度+N个分类
                 lables[featureSize]=np.zeros(shape=(featureSize,featureSize,3, 5+CLASS_NUM))

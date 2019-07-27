@@ -37,6 +37,10 @@ ANCHORS_GROUP_AREA = {
 
 TAG_PATH="/home/chinasilva/code/deeplearning_homework/project_6/data/coco_label.txt"
 
+TAG_TEST_PATH="/home/chinasilva/code/deeplearning_homework/project_6/data/coco_label_test.txt"
+
 IMG_PATH='/home/chinasilva/code/deeplearning_homework/project_6/data/val2017'
+
+IMG_TEST_PATH='/home/chinasilva/code/deeplearning_homework/project_6/data/testImg'
 
 MODEL_PATH='/home/chinasilva/code/deeplearning_homework/project_6/model/model.pth'
