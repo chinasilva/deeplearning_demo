@@ -247,7 +247,7 @@ def deviceFun():
 
 def convertToPosition(originPosition):
     '''
-    根据原图坐标进行最短边补齐
+    根据原图坐标，找到中心点进行补齐
     '''
     newImg=originPosition.copy()
     if len(originPosition) == 0:
@@ -256,10 +256,12 @@ def convertToPosition(originPosition):
     originImgH=originPosition[:,3]-originPosition[:,1]
     maxSide=np.maximum(originImgW,originImgH) #获取最长边max(originImgW,originImgH)
     #按照最长边进行抠图，短边进行补全
-    newImg[:,0]=originPosition[:,0]+originImgW*0.5-maxSide*0.5
-    newImg[:,1]=originPosition[:,1]+originImgH*0.5-maxSide*0.5
-    newImg[:,2]=newImg[:,0]+maxSide 
-    newImg[:,3]=newImg[:,1]+maxSide 
+    x1=originPosition[:,0]+originImgW*0.5-maxSide*0.5
+    y1=originPosition[:,1]+originImgH*0.5-maxSide*0.5
+    newImg[:,0]=np.where(x1<0,0,x1)
+    newImg[:,1]=np.where(y1<0,0,y1)
+    newImg[:,2]=np.where((newImg[:,0]+maxSide)<0,0,(newImg[:,0]+maxSide))
+    newImg[:,3]=np.where((newImg[:,1]+maxSide)<0,0,(newImg[:,1]+maxSide))
     newImg[:,4]=originPosition[:,4]
     return newImg
 
@@ -386,6 +388,12 @@ def offsetImage(self, image,imgName,imageInfo, targetSize,savePath):
     newImage.save(newImgName)
     offset=(imgName,offsetX1,offsetY1,offsetX2,offsetY2)
     return offset
+
+def to_rgb(img):
+    w, h = img.shape
+    ret = np.empty((w, h, 3), dtype=np.uint8)
+    ret[:, :, 0] = ret[:, :, 1] = ret[:, :, 2] = img
+    return ret
 
 if __name__ == "__main__":
     box=[]
