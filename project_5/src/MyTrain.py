@@ -11,7 +11,7 @@ from MyEnum import MyEnum
 import multiprocessing
 import matplotlib.pyplot as plt
 from MyArcLoss import ArcMarginProduct 
-
+from Lookahead import Lookahead
 class MyTrain():
     def __init__(self,Net,epoch,batchSize,imgPath,tagPath,testTagPath,testImgPath,testResult):
         # multiprocessing.set_start_method('spawn', True)
@@ -57,9 +57,13 @@ class MyTrain():
         # self.optimizer=torch.optim.SGD(self.net.parameters(), lr=0.001,momentum=0.9)
         self.optimizer2 = torch.optim.SGD(self.center_loss_layer.parameters(),lr=0.001)
 
+
+        self.lookahead = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
+
+
         
     def train(self):
-        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,num_workers=4) #,drop_last=True
+        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,num_workers=8) #,drop_last=True
         testData=data.DataLoader(self.testData,batch_size=self.batchSize,shuffle=True)#,num_workers=4
         losslst=[]
         # retLayer=ArcMarginProduct(32,2)
@@ -67,7 +71,7 @@ class MyTrain():
         trainLosses=[]
         for i in range(self.epoch):
             
-            print("epoch:",i)
+            # print("epoch:",i)
             try:
                 for j,(img,offset) in enumerate(trainData):
                     #训练分为两种损失
@@ -103,25 +107,28 @@ class MyTrain():
 
                     loss2=self.onlineHardSampleMining(loss2,output2,hardRate=0.7)
 
-                    output3=iouValue.view(-1,1)
-                    target3=self.learnIOU(offset=offset,size=self.size)
-                    target3=torch.tensor(target3).view(-1,1)
-                    loss3=self.lossFun3(target3.to(self.device),output3.to(self.device))
+                    # output3=iouValue.view(-1,1)
+                    # target3=self.learnIOU(offset=offset,size=self.size)
+                    # target3=torch.tensor(target3).view(-1,1)
+                    # loss3=self.lossFun3(target3.to(self.device),output3.to(self.device))
                     # loss3=self.onlineHardSampleMining(loss3,output3,hardRate=0.7)
                     
                     
-                    # self.center_loss_layer = CenterLoss(2, 32).to(self.device)
-                    # loss4=self.center_loss_layer(centerLoss.to(self.device),target1.view(-1).to(self.device))
-
-                    loss=loss1+0.5*loss2+loss_center #+loss4#+loss5
+                  
+                    loss=0.1*loss1+loss2+loss_center #+loss4#+loss5
 
                     self.optimizer2.zero_grad()
-                    self.optimizer.zero_grad()
+                    # self.optimizer.zero_grad()
+                    self.lookahead.zero_grad()
                     loss.backward()
-                    self.optimizer.step()
+                    # self.optimizer.step()
+                    self.lookahead.step()
                     self.optimizer2.step()
-                
-                    
+                    # if i%100==0:
+                    #     print("begin")
+                    #     torch.save(self.net,self.modelPath)
+                    #     print("epoch:{0},batch:{1}, loss1:{2},loss2:{3},loss_center:{4},loss:{5}".format(i,j,loss1.data,loss2.data,loss_center.data,loss.data))
+                    #     print("end")
                     if j%100==0:  #每100批次打印loss
                         b=datetime.now()
                         c=(b-a).microseconds//1000
@@ -144,8 +151,8 @@ class MyTrain():
                             tagLst.append(tag1)
                             tagLst.append(tag2)
                             writeTag(self.testResult,tagLst)
+                            self.draw(i,testlosses,trainLosses)
 
-                        # self.draw(i,testlosses,trainLosses)
             # plt.savefig("loss.jpg")
             # plt.ioff() # 画动态图
             # plt.show() # 保留最后一张，程序结束后不关闭
@@ -235,14 +242,14 @@ class MyTrain():
         losses2:Train
         '''
         # losses=list(filter(lambda x: x<0.3,losses)) #过滤部分损失，使图象更直观
-        x=range(len(losses)*(i+1),len(losses)*(i+2))
-        x2=range(len(losses2)*(i+1),len(losses2)*(i+2))
+        # x=range(len(losses)*(i+1),len(losses)*(i+2))
+        # x2=range(len(losses2)*(i+1),len(losses2)*(i+2))
 
         # plt.subplot(2, 1, 1)
         plt.plot(losses,label = "test",color='cyan')
         plt.plot(losses2,label = "train",color='black')
         plt.ylabel('Test losses')
-        plt.savefig("loss.jpg")
+        plt.savefig(self.netName+"loss.jpg")
 
         # x2=range(len(losses2)*(i),len(losses2)*(i+1))
         # plt.subplot(2, 1, 2)

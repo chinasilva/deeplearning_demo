@@ -7,8 +7,9 @@ import random
 import numpy as np
 # import align.detect_face
 import pickle
-import joblib
+# import joblib
 import imageio
+from MyDetector import MyDetector
 
 def load_kth_data(f_name, data_path, image_size, L):
     """
@@ -101,22 +102,50 @@ def __getitem__(self, index):
 
     return seq_batch
 
+def to_rgb(img):
+    w, h = img.shape
+    ret = np.empty((w, h, 3), dtype=np.uint8)
+    ret[:, :, 0] = ret[:, :, 1] = ret[:, :, 2] = img
+    return ret
 
 def readVideo():
-    cap = cv2.VideoCapture('D:\\video\\Wildlife.wmv')
+    testImagePath=r'/home/chinasilva/code/deeplearning_homework/project_5/images_val/mytest2'
+    netPath=r'/home/chinasilva/code/deeplearning_homework/project_5/model'
+    myDetector=MyDetector(testImagePath,netPath)
+    # cap = cv2.VideoCapture('/home/chinasilva/Downloads/jiangnanstyle.mp4')
+    # cap = cv2.VideoCapture('/home/chinasilva/Downloads/jiangnanstyle2.webm')
+    cap = cv2.VideoCapture('/home/chinasilva/Downloads/dance.webm')
+    
+    # 建个窗口并命名
+    cv2.namedWindow("video",1)
+    c=0
+    num = 0
+    frame_interval=3 # frame intervals  
+    # 用于循环显示图片，达到显示视频的效果
     while(cap.isOpened()):
         ret , frame = cap.read()
         #这里必须加上判断视频是否读取结束的判断,否则播放到最后一帧的时候出现问题了
-        if ret == True:
-            #gray = cv2.cvtColor(frame , cv2.COLOR_BGR2GRAY)
-            #gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-            #cv2.imshow("frame" , gray)
-            cv2.imshow("frame" , frame)
-        else:
-            break
-        #因为视频是10帧每秒，因此每一帧等待100ms
-        if cv2.waitKey(25) & 0xFF == ord('q'):
-            break
+        timeF = frame_interval
+        detect_face=[]
+
+        if frame is None:
+            print("*****************end***************")
+            return
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        if gray.ndim == 2:
+            img = to_rgb(gray)
+
+        if(c%timeF == 0):
+            if ret == True:
+                myDetector.video(img,frame)
+                cv2.imshow("video" , frame)
+            else:
+                break
+            #因为视频是10帧每秒，因此每一帧等待100ms
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                break
+        c+=1
     cap.release()
     cv2.destroyAllWindows()
 
