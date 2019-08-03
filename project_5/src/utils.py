@@ -395,13 +395,30 @@ def to_rgb(img):
     ret[:, :, 0] = ret[:, :, 1] = ret[:, :, 2] = img
     return ret
 
+def fileRname(path):
+    #获取该目录下所有文件，存入列表中
+    fileList=os.listdir(path)
+
+    n=0
+    for i in fileList:
+        
+        #设置旧文件名（就是路径+文件名）
+        oldname=path+ os.sep + fileList[n]   # os.sep添加系统分隔符
+        
+        #设置新文件名
+        newname=path + os.sep +'a'+str(n+1)+'.jpeg'
+        
+        os.rename(oldname,newname)   #用os模块中的rename方法对文件改名
+        print(oldname,'======>',newname)
+        n+=1
+
 if __name__ == "__main__":
-    box=[]
-    box1=(1,2,3,4,0)
-    box2=(2,3,4,5,1)
-    box.append(box1)
-    box.append(box2)
-    nms(box)
+    # box=[]
+    # box1=(1,2,3,4,0)
+    # box2=(2,3,4,5,1)
+    # box.append(box1)
+    # box.append(box2)
+    # nms(box)
     # # 创建图象坐标点
     # image0_x=np.array((0,0))
     # image0_y=np.array((5,5))
@@ -453,3 +470,4 @@ if __name__ == "__main__":
     # pil_im2 = Image.open(imgName2, 'r')
     # imshow(np.asarray(pil_im2))
     # plt.show()
+    fileRname('/media/chinasilva/编程资料/deeplearning/datasets/myFaceImg/taozi')

@@ -12,6 +12,8 @@ import multiprocessing
 import matplotlib.pyplot as plt
 from MyArcLoss import ArcMarginProduct 
 from Lookahead import Lookahead
+from torch.utils.tensorboard import SummaryWriter
+
 class MyTrain():
     def __init__(self,Net,epoch,batchSize,imgPath,tagPath,testTagPath,testImgPath,testResult):
         # multiprocessing.set_start_method('spawn', True)
@@ -19,6 +21,7 @@ class MyTrain():
         Net:PNet,RNet,ONet对应需要训练的网络名称
         epoch,batchSize 批次和轮次
         '''
+        self.writer = SummaryWriter()
         self.netName=Net
         self.testResult=testResult
         self.device=deviceFun()
@@ -53,17 +56,18 @@ class MyTrain():
         if os.path.exists(self.modelPath):
             self.net=torch.load(self.modelPath)
 
-        self.optimizer=torch.optim.Adam(self.net.parameters())
-        # self.optimizer=torch.optim.SGD(self.net.parameters(), lr=0.001,momentum=0.9)
-        self.optimizer2 = torch.optim.SGD(self.center_loss_layer.parameters(),lr=0.001)
+        # self.optimizer=torch.optim.SGD(self.net.parameters(), lr=0.001,momentum=0.9,weight_decay=0.00003)
+        # self.optimizer2 = torch.optim.SGD(self.center_loss_layer.parameters(),lr=0.001)
+        # self.optimizer2 = torch.optim.Adam(self.center_loss_layer.parameters())
 
-
-        self.lookahead = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
+        # self.optimizer=torch.optim.Adam(self.net.parameters())
+        self.optimizer=torch.optim.SGD(self.net.parameters(), lr=0.0001,momentum=0.9,weight_decay=0.0005)
+        self.optimizer2 = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
 
 
         
     def train(self):
-        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,num_workers=8) #,drop_last=True
+        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,num_workers=4) #,drop_last=True
         testData=data.DataLoader(self.testData,batch_size=self.batchSize,shuffle=True)#,num_workers=4
         losslst=[]
         # retLayer=ArcMarginProduct(32,2)
@@ -80,6 +84,11 @@ class MyTrain():
                     # offset=confidence,offsetX1,offsetY1,offsetX2,offsetY2
                     a=datetime.now()
                     outputClass,outputBox,outputLandMark,iouValue,centerLoss=self.net(img.to(self.device))
+                    # self.writer.add_histogram("Weight1",self.net.PNet[0].weight.data,global_step=i)
+                    # self.writer.add_histogram("Weight2",self.net.PNet[3].weight.data,global_step=i)
+                    # self.writer.add_histogram("Weight3",self.net.PNet[5].weight.data,global_step=i)
+
+
                     index=offset[:,0]!=MyEnum.part.value # 过滤部分人脸样本，进行比较
                     target1=offset[index] 
                     target1=target1[:,:1] #取第0位,置信度
@@ -90,7 +99,7 @@ class MyTrain():
 
                     loss1=self.lossFun1(output1.to(self.device),target1.to(self.device))
 
-                    loss_center = 0.003*self.center_loss_layer(centerLoss.to(self.device), target1.view(-1).to(self.device))
+                    loss_center = 0.3*self.center_loss_layer(centerLoss.to(self.device), target1.view(-1).to(self.device))
                     # centerLoss2=retLayer(centerLoss,target1)
                     # loss5=self.criterion(centerLoss2.to(self.device),target1.view(-1).long().to(self.device))
 
@@ -115,14 +124,12 @@ class MyTrain():
                     
                     
                   
-                    loss=0.1*loss1+loss2+loss_center #+loss4#+loss5
+                    loss=loss1+loss2#+loss_center #+loss3 0.5*
 
                     self.optimizer2.zero_grad()
                     # self.optimizer.zero_grad()
-                    self.lookahead.zero_grad()
                     loss.backward()
                     # self.optimizer.step()
-                    self.lookahead.step()
                     self.optimizer2.step()
                     # if i%100==0:
                     #     print("begin")
@@ -137,7 +144,7 @@ class MyTrain():
                         print("save,success!!!")
                         tagLst=[]
                         with torch.no_grad():
-                            
+                            torch.norm
                             testloss=0
                             trainLoss=0.
                             accuracyTrain,recallTrain,trainLoss=self.analysize(trainData)

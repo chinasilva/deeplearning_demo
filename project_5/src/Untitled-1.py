@@ -67,61 +67,68 @@ from utils import nms,createImage,pltFun,deviceFun
 # test=torch.rand(3,3)
 # print("test:",test)
 # print("test2:",torch.gt(test,0.6))
+a = torch.arange(9, dtype= torch.float)
+# b = a.reshape((3, 3))
+print(a)
+flag=0
+for i in 8:
+    sum=i**2+flag
+    flag=i**2
+print(torch.norm(a))
 
+# if __name__ == "__main__":
+#     root='/home/chinasilva/code/deeplearning_homework/project_5/images_val/mytest'
+#     testImagePath=root+'/img'
+#     dataset=[]
+#     dataset.extend(os.listdir(testImagePath))
+#     m = nn.AdaptiveAvgPool2d((48,48))
 
-if __name__ == "__main__":
-    root='/home/chinasilva/code/deeplearning_homework/project_5/images_val/mytest'
-    testImagePath=root+'/img'
-    dataset=[]
-    dataset.extend(os.listdir(testImagePath))
-    m = nn.AdaptiveAvgPool2d((48,48))
-
-    for i,imgName in enumerate(dataset):
-        with Image.open(os.path.join(testImagePath,imgName)).convert('RGB') as img:
-            # img=cv2.imread(testImagePath+'/'+imgName)
-            # originPosition=np.arrage
-            # w=img2.shape[0]
-            # h=img2.shape[1]
-            # convertToPosition()
-            # img.size()
-            # spp=SpatialPyramidPool2D(out_side=(3,100,100))
-            # img3=img.crop((440,357,582,468))
-            # img3=Image.fromarray(imgNumpy)
-            # img4=img3.resize((48,48))
-            # img3.save(root+'/result/a.jpg')
-            # img4.save(root+'/result/b.jpg')
-            a=[[357,468,440,551],
-            [357,468,440,551],
-            [357,468,440,551],
-            [357,468,440,551],
-            [357,468,440,551]]
-            # b=[359:470,442:553]
+#     for i,imgName in enumerate(dataset):
+#         with Image.open(os.path.join(testImagePath,imgName)).convert('RGB') as img:
+#             # img=cv2.imread(testImagePath+'/'+imgName)
+#             # originPosition=np.arrage
+#             # w=img2.shape[0]
+#             # h=img2.shape[1]
+#             # convertToPosition()
+#             # img.size()
+#             # spp=SpatialPyramidPool2D(out_side=(3,100,100))
+#             # img3=img.crop((440,357,582,468))
+#             # img3=Image.fromarray(imgNumpy)
+#             # img4=img3.resize((48,48))
+#             # img3.save(root+'/result/a.jpg')
+#             # img4.save(root+'/result/b.jpg')
+#             a=[[357,468,440,551],
+#             [357,468,440,551],
+#             [357,468,440,551],
+#             [357,468,440,551],
+#             [357,468,440,551]]
+#             # b=[359:470,442:553]
             
 
-            # imgNumpy=np.asarray(img)[357:468,440:551]
-            # imgTorch=(torch.from_numpy(imgNumpy).permute(2,0,1).unsqueeze(dim=0)).float() #（N,C,H,W）
-            # imgTorch2=m(imgTorch).squeeze(dim=0).permute(1,2,0)
-            # imgNumpy2=np.uint8(imgTorch2)
-            # img5=Image.fromarray(imgNumpy2)
-            # img5.save(root+'/result/c.jpg')
+#             # imgNumpy=np.asarray(img)[357:468,440:551]
+#             # imgTorch=(torch.from_numpy(imgNumpy).permute(2,0,1).unsqueeze(dim=0)).float() #（N,C,H,W）
+#             # imgTorch2=m(imgTorch).squeeze(dim=0).permute(1,2,0)
+#             # imgNumpy2=np.uint8(imgTorch2)
+#             # img5=Image.fromarray(imgNumpy2)
+#             # img5.save(root+'/result/c.jpg')
 
-            imgs=np.repeat(np.expand_dims(np.asarray(img),axis=0),repeats=5,axis=0)#获取图片数据(N,W,H,C)
-            # [PLst2.astype(int)[:,2]:PLst2.astype(int)[:,3],PLst2.astype(int)[:,0]:PLst2.astype(int)[:,1]]
-            imgNumpy=np.asarray(imgs)[a]  # like crop 
-            imgTorch=(torch.from_numpy(imgNumpy).permute(0,3,2,1)).float() #（N,C,H,W）
-            # outLst=adaptiveAvgPool(imgTorch)-0.5 # like resize use
-            # outLst2=[x1,y1,x2,y2]
+#             imgs=np.repeat(np.expand_dims(np.asarray(img),axis=0),repeats=5,axis=0)#获取图片数据(N,W,H,C)
+#             # [PLst2.astype(int)[:,2]:PLst2.astype(int)[:,3],PLst2.astype(int)[:,0]:PLst2.astype(int)[:,1]]
+#             imgNumpy=np.asarray(imgs)[a]  # like crop 
+#             imgTorch=(torch.from_numpy(imgNumpy).permute(0,3,2,1)).float() #（N,C,H,W）
+#             # outLst=adaptiveAvgPool(imgTorch)-0.5 # like resize use
+#             # outLst2=[x1,y1,x2,y2]
 
-            # img2=img.resize((100,100))
-            # img.show()
-            # img2.show()
-            # m = nn.AdaptiveAvgPool2d(100)
-            # img3=torch.from_numpy(np.expand_dims(np.asarray(img).transpose(2,0,1), axis=0)) # (n,c,h,w)
-            # input = torch.randn(1, 64, 10, 9)
-            # img3=m(img3)
-            # img3=img3.numpy()
-            # img3=Image.fromarray(np.uint8(img3))
-            # img3.show()
-            # a=input("test!!!!!!!!!!1")
-            # cv2.imshow('image',img)
-            # cv2.imshow('image2',img2)
+#             # img2=img.resize((100,100))
+#             # img.show()
+#             # img2.show()
+#             # m = nn.AdaptiveAvgPool2d(100)
+#             # img3=torch.from_numpy(np.expand_dims(np.asarray(img).transpose(2,0,1), axis=0)) # (n,c,h,w)
+#             # input = torch.randn(1, 64, 10, 9)
+#             # img3=m(img3)
+#             # img3=img3.numpy()
+#             # img3=Image.fromarray(np.uint8(img3))
+#             # img3.show()
+#             # a=input("test!!!!!!!!!!1")
+#             # cv2.imshow('image',img)
+#             # cv2.imshow('image2',img2)

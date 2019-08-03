@@ -114,13 +114,14 @@ def readVideo():
     myDetector=MyDetector(testImagePath,netPath)
     # cap = cv2.VideoCapture('/home/chinasilva/Downloads/jiangnanstyle.mp4')
     # cap = cv2.VideoCapture('/home/chinasilva/Downloads/jiangnanstyle2.webm')
-    cap = cv2.VideoCapture('/home/chinasilva/Downloads/dance.webm')
+    cap = cv2.VideoCapture('/home/chinasilva/Downloads/video/3.wmv')
+    # cap = cv2.VideoCapture('/home/chinasilva/Downloads/dance.webm')
     
     # 建个窗口并命名
     cv2.namedWindow("video",1)
     c=0
     num = 0
-    frame_interval=3 # frame intervals  
+    frame_interval=1 # frame intervals  
     # 用于循环显示图片，达到显示视频的效果
     while(cap.isOpened()):
         ret , frame = cap.read()
