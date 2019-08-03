@@ -190,7 +190,7 @@ class MyDetector():
         return torch.stack(outLst),np.stack(outLst2) #将PNet出来的图片进行下一步操作
 
     def rnetDetector(self,img,PLst,PLst2):
-        self.screenImgTest(PLst2,self.imgName,'PNet')
+        # self.screenImgTest(PLst2,self.imgName,'PNet')
         RLst=[] #从PNet返回找到人脸的框
         with torch.no_grad():
             outLst=[]
@@ -204,7 +204,7 @@ class MyDetector():
             outputClass=outputClass.cpu().data.numpy()
             outputBox=outputBox.cpu().data.numpy()
              #置信度大于0.99认为有人脸
-            idxs, _ = np.where(outputClass > 0.99)
+            idxs, _ = np.where(outputClass > 0.999)
 
             #过滤置信度小于0.6的数据,并且返回对应索引
     
@@ -238,7 +238,7 @@ class MyDetector():
         return torch.stack(outLst),np.stack(outLst2)
     
     def onetDetector(self,img,RLst,RLst2):
-        self.screenImgTest(RLst2,self.imgName,'RNet')
+        # self.screenImgTest(RLst2,self.imgName,'RNet')
         OLst=[] #从PNet返回找到人脸的框
         with torch.no_grad():
             pos=[]
