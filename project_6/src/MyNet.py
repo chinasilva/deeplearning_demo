@@ -166,6 +166,8 @@ class MyNet(torch.nn.Module):
         detetion_out_26 = self.detetion_26(convset_out_26)
 
         up_out_52 = self.up_52(convset_out_26)
+        # print("up_out_52:",up_out_52.shape)
+        # print("h_52:",h_52.shape)
         route_out_52 = torch.cat((up_out_52, h_52), dim=1)
         convset_out_52 = self.convset_52(route_out_52)
         detetion_out_52 = self.detetion_52(convset_out_52)

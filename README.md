@@ -9,4 +9,10 @@ project3:Batch Normalization、Instance Normalization、Layer Normalization三�
 
 project4:使用numpy 实现IOU,NMS
 
-project5:MTCNN项目实战
+project5:MTCNN项目实战,人脸捕获
+
+project6:YOLO项目实战,COCO数据集分类识别
+
+project7:Center Loss,Arc Loss项目实战
+
+project8:RCNN,SLTM,GRU 循环神经网络数字10分类

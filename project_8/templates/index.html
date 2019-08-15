@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="static/index.css">
+    <link rel="stylesheet" href="static/common.css">
+    
+    <title>手写数字识别</title>
+</head>
+
+<body>
+    <div class="body-div">
+        <div class="nav-div">
+            <div class="img-div">
+            </div>
+            <div class="title-div">手写数字识别测试</div>
+        </div>
+        <div class="digit-div">
+            <div class="clearfix">
+                <div class="text-div">手写数字画板</div>
+            </div>
+            <div class="split-line-div"></div>
+            <div class="title-text">
+                <span>请在下方区域使用鼠标手写数字：</span>
+            </div>
+            <div id="container">
+                <div id="canvas-div">
+                    <canvas id="canvas" mouseLeave="mouseLeave">抱歉，您的浏览器不支持canvas元素</canvas>
+                </div>
+            </div>
+        </div>
+        <div class="button-div">
+            <button type="button" id="clear" class="btn btn-danger">清除</button>
+            <button type="button" onclick="distinguish()" id="distinguish" class="btn btn-primary" style="margin-top:30px;">识别</button>
+        </div>
+        <div class="result-div">
+            <div class="clearfix">
+                    <div class="text-div"><span>识别结果</span></div>
+            </div>
+            <div class="split-line-div"></div>
+
+            <div class="result-content-div">
+                    <div class="result-left">
+                            <div class="title-text-left">
+                                    <span>第一识别结果：</span>
+                                </div>
+                            <div class="num-div">
+                                <div id="result-num-div">
+                                    </div>
+                                </div>
+                    </div>
+
+                    <div class="result-right">
+                            <div class="title-text-right">
+                                    <span>所有识别结果：</span>
+                                </div>
+                                <div class="num-div">
+                                    <div id="result-table-div">
+                                            
+                                            </div>
+                                </div>
+                    </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    <script src="static/util.js"></script>
+    <script src="static/index.js"></script>
+</body>
+
+</html>

@@ -21,7 +21,7 @@ class MyTrain():
         Net:PNet,RNet,ONet对应需要训练的网络名称
         epoch,batchSize 批次和轮次
         '''
-        self.writer = SummaryWriter()
+        self.writer = SummaryWriter(log_dir="./runs/{}_runs".format(Net))
         self.netName=Net
         self.testResult=testResult
         self.device=deviceFun()
@@ -57,22 +57,23 @@ class MyTrain():
             self.net=torch.load(self.modelPath)
 
         # self.optimizer=torch.optim.SGD(self.net.parameters(), lr=0.001,momentum=0.9,weight_decay=0.00003)
-        # self.optimizer2 = torch.optim.SGD(self.center_loss_layer.parameters(),lr=0.001)
-        # self.optimizer2 = torch.optim.Adam(self.center_loss_layer.parameters())
+        # self.optimizer3 = torch.optim.SGD(self.net.parameters(),lr=0.5)
+        # self.optimizer3 = torch.optim.Adam(self.center_loss_layer.parameters())
 
         # self.optimizer=torch.optim.Adam(self.net.parameters())
-        self.optimizer=torch.optim.SGD(self.net.parameters(), lr=0.0001,momentum=0.9,weight_decay=0.0005)
-        self.optimizer2 = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
+        self.optimizer2=torch.optim.SGD(self.net.parameters(), lr=0.0001,momentum=0.9,weight_decay=0.0005)
+        # self.optimizer2 = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
 
 
         
     def train(self):
         trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,num_workers=4) #,drop_last=True
-        testData=data.DataLoader(self.testData,batch_size=self.batchSize,shuffle=True)#,num_workers=4
+        testData=data.DataLoader(self.testData,batch_size=512,shuffle=True)#,num_workers=4
         losslst=[]
         # retLayer=ArcMarginProduct(32,2)
         testlosses=[]
         trainLosses=[]
+        accumulation_steps = 32
         for i in range(self.epoch):
             
             # print("epoch:",i)
@@ -99,7 +100,7 @@ class MyTrain():
 
                     loss1=self.lossFun1(output1.to(self.device),target1.to(self.device))
 
-                    loss_center = 0.3*self.center_loss_layer(centerLoss.to(self.device), target1.view(-1).to(self.device))
+                    loss_center = 0.003*self.center_loss_layer(centerLoss.to(self.device), target1.view(-1).to(self.device))
                     # centerLoss2=retLayer(centerLoss,target1)
                     # loss5=self.criterion(centerLoss2.to(self.device),target1.view(-1).long().to(self.device))
 
@@ -123,20 +124,35 @@ class MyTrain():
                     # loss3=self.onlineHardSampleMining(loss3,output3,hardRate=0.7)
                     
                     
-                  
                     loss=loss1+loss2#+loss_center #+loss3 0.5*
 
-                    self.optimizer2.zero_grad()
-                    # self.optimizer.zero_grad()
+
+                    # 2.1 loss regularization
+                    # loss = loss/accumulation_steps
+                    # 2.2 back propagation
+                    # self.optimizer2.zero_grad()   # reset gradient
+                    self.optimizer2.zero_grad()   # reset gradient
                     loss.backward()
-                    # self.optimizer.step()
-                    self.optimizer2.step()
+                    # 3. update parameters of net
+                    # if((j+1)%accumulation_steps)==0:
+                        # optimizer the net
+                    self.optimizer2.step()        # update parameters of net
+
+
+
+                    # self.optimizer2.zero_grad()
+                    # # self.optimizer3.zero_grad()
+                    # loss1.backward()
+                    # self.optimizer2.step()
+
+
+                    # self.optimizer3.step()
                     # if i%100==0:
                     #     print("begin")
                     #     torch.save(self.net,self.modelPath)
                     #     print("epoch:{0},batch:{1}, loss1:{2},loss2:{3},loss_center:{4},loss:{5}".format(i,j,loss1.data,loss2.data,loss_center.data,loss.data))
                     #     print("end")
-                    if j%100==0:  #每100批次打印loss
+                    if j%1000==0:  #每100批次打印loss
                         b=datetime.now()
                         c=(b-a).microseconds//1000
                         print("epoch:{0},batch:{1}, loss1:{2},loss2:{3},loss_center:{4},loss:{5},用时{6}ms".format(i,j,loss1.data,loss2.data,loss_center.data,loss.data,c))
@@ -158,7 +174,9 @@ class MyTrain():
                             tagLst.append(tag1)
                             tagLst.append(tag2)
                             writeTag(self.testResult,tagLst)
-                            self.draw(i,testlosses,trainLosses)
+                            self.writer.add_scalar("train Loss",trainLoss,global_step=i)
+                            self.writer.add_scalar("test Loss",testloss,global_step=i)
+                            # self.draw(i,testlosses,trainLosses)
 
             # plt.savefig("loss.jpg")
             # plt.ioff() # 画动态图
