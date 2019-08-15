@@ -87,9 +87,13 @@ class MyDetector():
             pt=(b-a).microseconds//1000
             rt=(c-b).microseconds//1000
             ot=(d-c).microseconds//1000
-            print("pnet耗时:{0},rnet耗时:{1},onet耗时:{2},imgName:{3}:".format(pt,rt,ot,self.imgName))
+            # print("pnet耗时:{0},rnet耗时:{1},onet耗时:{2},imgName:{3}:".format(pt,rt,ot,self.imgName))
+            print("pnet耗时:{0},rnet耗时:{1},onet耗时:{2}".format(pt,rt,ot))
             for out in OLst:
                 x1,y1,x2,y2=out[0:4].astype(int)
+                if (x2-x1)<15: ##15像素过滤
+                    print("********************10像素过滤************")
+                    continue
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 1)
                 cv2.putText(frame,str(out[4]),(x1, y1),cv2.FONT_HERSHEY_COMPLEX,0.5,(0,0,255),1)
         except Exception as e:
@@ -123,7 +127,7 @@ class MyDetector():
                 tmpClass=outputClassValue.permute(1,0)#(w,h)
 
                 #过滤置信度小于0.6的数据,并且返回对应索引
-                idxs = torch.nonzero(torch.gt(tmpClass, 0.99))#(w,h)
+                idxs = torch.nonzero(torch.gt(tmpClass, 0.9))#(w,h)
                 tmp=((idxs*stride).float() / scale)
                 tmp2=((idxs*stride + self.pnetSize).float() / scale)
                 x1=tmp[:,0] 
@@ -153,6 +157,8 @@ class MyDetector():
                     PLst.extend(boxes)
             b=datetime.now()
             PLst=np.array(PLst)
+            if len(PLst)==0:
+                return [],[]
             PLst=PLst[mynms.py_nms(PLst,thresh=0.5)]
             c=datetime.now()
             # PLst=nms2(PLst,thresh=0.5)
@@ -204,7 +210,7 @@ class MyDetector():
             outputClass=outputClass.cpu().data.numpy()
             outputBox=outputBox.cpu().data.numpy()
              #置信度大于0.99认为有人脸
-            idxs, _ = np.where(outputClass > 0.999)
+            idxs, _ = np.where(outputClass > 0.99)
 
             #过滤置信度小于0.6的数据,并且返回对应索引
     
@@ -218,7 +224,8 @@ class MyDetector():
             y2 = (postion[:,3] - h * offset[:,3]).reshape(-1,1)
             box=[ x1,  y1,  x2,  y2,  outputClass]
             box=np.stack(box,axis=1).reshape(-1,5)
-            
+            if len(box)==0:
+                return [],[]
             RLst=np.array(box)[mynms.py_nms(box,thresh=0.5)]#将PNet出来的图片进行下一步操作
             # RLst=nms2(box,thresh=0.5)#将PNet出来的图片进行下一步操作
             RLst2=convertToPosition(RLst)
@@ -249,7 +256,7 @@ class MyDetector():
             outputBox=outputBox.cpu().data.numpy()
 
              #置信度大于0.99认为有人脸
-            idxs, _ = np.where(outputClass > 0.9999)
+            idxs, _ = np.where(outputClass > 0.999)
 
             postion = RLst2[idxs]
             offset=outputBox[idxs]
@@ -283,7 +290,7 @@ class MyDetector():
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    testImagePath=r'/home/chinasilva/code/deeplearning_homework/project_5/images_val/mytest2'
+    testImagePath=r'/home/chinasilva/code/deeplearning_homework/project_5/images_val/mytest'
    
     netPath=r'/home/chinasilva/code/deeplearning_homework/project_5/model'
     detector=MyDetector(testImagePath,netPath)

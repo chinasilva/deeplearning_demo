@@ -1,0 +1,229 @@
+.body-div {
+    width: 100%;
+    height: 100%;
+    margin: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+body {
+    background-color: #f8fafc;
+    margin: 0;
+}
+
+.nav-div {
+    width: 100%;
+    height: 90px;
+    background-color: #2F89DD;
+    display: flex;
+    flex-direction: row;
+}
+
+.img-div {
+    width: 145px;
+    height: 50%;
+    margin-left: 3%;
+    margin-top: 22px;
+    background-image: url("logo.png");
+    background-repeat: no-repeat;
+    background-size: 100%, 100%;
+}
+
+.title-div {
+    width: 300px;
+    height: 25px;
+    margin-left: 2%;
+    font-size: 25px;
+    font-family: "SimHei";
+    color: #EBEEF5;
+    line-height: 25px;
+    margin-top: 30px;
+}
+
+.split-line-div {
+    display: inline-block;
+    height: 1px;
+    width: 100%;
+    background: #EBEEF5;
+    overflow: hidden;
+    vertical-align: middle;
+}
+
+.digit-div {
+    height: 600px;
+    width: 40%;
+    align-items: baseline;
+    border: 1px solid #EBEEF5;
+    background-color: #FFFFFF;
+    border-radius: 4px;
+    box-shadow: 5px 5px 5px #F3F3F3, 5px -5px 5px #F3F3F3, -5px 5px 5px #F3F3F3, -5px -5px 5px #F3F3F3;
+    margin-top: 50px;
+}
+
+.button-div {
+    width: 50px;
+    height: 300px;
+    margin-top: 19%;
+    display: flex;
+    flex-direction: column;
+}
+
+.result-div {
+    height: 600px;
+    width: 40%;
+    border: 1px solid #EBEEF5;
+    background-color: #FFFFFF;
+    border-radius: 4px;
+    box-shadow: 5px 5px 5px #F3F3F3, 5px -5px 5px #F3F3F3, -5px 5px 5px #F3F3F3, -5px -5px 5px #F3F3F3;
+    margin-top: 50px;
+}
+
+.div-right {
+    float: left;
+    height: 600px;
+    width: 48%;
+}
+
+.clearfix {
+    width: 100%;
+    height: 3%;
+}
+
+.text-div {
+    width: 20%;
+    height: 18px;
+    margin-left: 20px;
+    margin-top: 20px;
+    font-size: 18px;
+    line-height: 18px;
+}
+
+.num-div {
+    width: 100%;
+    height: 90%;
+}
+
+#result-table-div {
+    width: 80%;
+    height: 100%;
+    margin-left: 20px;
+    text-align: center;
+    border: 1px solid #EBEEF5;
+}
+
+/*
+表格样式
+*/
+
+table {
+    border: 1px solid #EBEEF5;
+    width: 100%;
+}
+
+#result-num-div {
+    width: 80%;
+    height: 100%;
+    margin-left: 20px;
+    text-align: center;
+    line-height: 100%;
+    font-size: 200px;
+    border: 1px solid #EBEEF5;
+}
+
+.result-content-div {
+    width: 100%;
+    height: 90%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.result-left {
+    width: 49%;
+    height: 100%;
+}
+
+.result-right {
+    width: 49%;
+    height: 100%;
+}
+
+#result-num1-div {
+    width: 80%;
+    height: 80%;
+    margin-left: 10%;
+    margin-top: 10%;
+    text-align: center;
+    line-height: 100%;
+    font-size: 200px;
+}
+
+#result-num2-div {
+    width: 30%;
+    height: 30%;
+    text-align: center;
+    line-height: 100%;
+    font-size: 200px;
+    border: 1px solid #EBEEF5;
+    right: 0;
+    bottom: 0;
+    background-color: #F3F3F3;
+}
+
+.title-text {
+    width: 95%;
+    height: 5%;
+    line-height: 32px;
+    margin-left: 20px;
+}
+
+.title-text-right {
+    width: 100%;
+    height: 32;
+    line-height: 32px;
+    margin-left: 20px;
+}
+
+.title-text-left {
+    width: 100%;
+    height: 32;
+    line-height: 32px;
+    margin-left: 20px;
+}
+
+#container {
+    text-align: center;
+    width: 100%;
+    height: 85%;
+    justify-content: center;
+}
+
+#canvas {
+    border-radius: 4px;
+    margin: auto;
+    display: block;
+    border: 1px solid #EBEEF5;
+}
+
+#canvas-div {
+    width: 90%;
+    height: 90%;
+    margin-left: 20px;
+}
+
+#img {
+    width: 600px;
+    height: 480px;
+    margin-top: 30px;
+    margin-left: 20px;
+    border-radius: 4px;
+    display: block;
+}
+
+.center-div {
+    width: 50px;
+    height: 100px;
+    float: left;
+    margin-top: 250px;
+}

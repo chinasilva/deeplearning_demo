@@ -113,8 +113,8 @@ def readVideo():
     netPath=r'/home/chinasilva/code/deeplearning_homework/project_5/model'
     myDetector=MyDetector(testImagePath,netPath)
     # cap = cv2.VideoCapture('/home/chinasilva/Downloads/jiangnanstyle.mp4')
-    # cap = cv2.VideoCapture('/home/chinasilva/Downloads/jiangnanstyle2.webm')
-    cap = cv2.VideoCapture('/home/chinasilva/Downloads/video/3.wmv')
+    cap = cv2.VideoCapture('/home/chinasilva/Downloads/jiangnanstyle2.webm')
+    # cap = cv2.VideoCapture('/home/chinasilva/Downloads/video/3.wmv')
     # cap = cv2.VideoCapture('/home/chinasilva/Downloads/dance.webm')
     
     # 建个窗口并命名

@@ -10,5 +10,5 @@ if __name__ == "__main__":
     testImgPath=r'/mnt/my_wider_face_val/24'
     testResult=r'/mnt/my_wider_face_val/resultRNet.txt'
 
-    myTrain=MyTrain(Net='RNet',epoch=1000,batchSize=512,imgPath=imgPath,tagPath=tagPath,testTagPath=testTagPath,testImgPath=testImgPath,testResult=testResult)
+    myTrain=MyTrain(Net='RNet',epoch=1000,batchSize=32,imgPath=imgPath,tagPath=tagPath,testTagPath=testTagPath,testImgPath=testImgPath,testResult=testResult)
     myTrain.train()
