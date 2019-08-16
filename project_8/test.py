@@ -12,7 +12,7 @@ app = Flask(__name__)
 
 device=device_fun() 
 
-net = torch.jit.load("models/net.pth")
+net = torch.jit.load("/home/chinasilva/code/deeplearning_homework/project_8/models/model.pth")
 
 @app.route('/')
 def index():
@@ -22,7 +22,7 @@ def index():
 def start():
     data = json.loads(request.get_data())
     img = base64.b64decode(data["img"])
-    img_path = "static/images/example.jpg"
+    img_path = "/home/chinasilva/code/deeplearning_homework/project_8/static/images/example.jpg"
 
     with open(img_path, 'wb') as file:
         file.write(img)
