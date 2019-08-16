@@ -5,20 +5,22 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
+import os
 from src.MyNet import MyNet
+from src.utils import device_fun
 
-def device_fun():
-    device=torch.device("cuda:0" if torch.cuda.is_available() else"cpu")
-    print(device)
-    return device
+modelPath=r'/home/chinasilva/code/deeplearning_homework/project_8/models/model.pth'
 
 def main():
-    epochs = 100
-    batch_size = 6400
+    epochs = 1000
+    batch_size = 512
     # in_features=10
     # nb_classes=10
 
-    net = MyNet()
+    if os.path.exists(modelPath):
+        net=torch.jit.load(modelPath)
+    else:
+      net = MyNet()
     criterion=nn.CrossEntropyLoss()
 
     # 定义使用GPU
@@ -30,10 +32,10 @@ def main():
     # criterion.to(device)
 
     # criterion = nn.MSELoss(reduce=None, size_average=None, reduction='mean')
-    optimizer = optim.Adam(net.parameters(), weight_decay=0,
-                           amsgrad=False, lr=0.0001, betas=(0.9, 0.999), eps=1e-08)
-
-    scheduler = optim.lr_scheduler.StepLR(optimizer, 20, gamma=0.1)
+    # optimizer = optim.Adam(net.parameters(), weight_decay=0,
+    #                        amsgrad=False, lr=0.0001, betas=(0.9, 0.999), eps=1e-08)
+    optimizer=optim.SGD(net.parameters(), lr=0.0001,momentum=0.9,weight_decay=0.0005)
+    # scheduler = optim.lr_scheduler.StepLR(optimizer, 20, gamma=0.1)
 
     transform = transforms.Compose([
         transforms.Resize(28),
@@ -54,7 +56,7 @@ def main():
     plt.ion() # 画动态图
     for i in range(epochs):
         print("epochs: {}".format(i))
-        scheduler.step()
+        # scheduler.step()
         for j, (input, target) in enumerate(dataloader):
             # if iscuda
 
@@ -65,12 +67,12 @@ def main():
             # output=F.softmax(output, dim=1)
             # output=F.log_softmax(output, dim=1) # log_softmax 输出激活
             output = output.to(device)
+            # print("output:",output.shape)
 
             # # MSE 需要进行转化成one-hot编码形式，交叉熵则不需要进行转换，内置函数进行转换
             # target = torch.zeros(target.size(0), 10).scatter_(1, target.view(-1, 1), 1)
 
             target=target.to(device)
-
 
             loss = criterion(output, target)
 
@@ -82,6 +84,8 @@ def main():
                                                                  j, len(dataloader), loss.float()))
             if j % 100 == 0:
                 losses.append(loss.float())
+        save_model = torch.jit.trace(net,  torch.rand(1, 1, 28, 28).to(device))
+        save_model.save(modelPath)
         # print("--------------------------------0",losses)
         accuracyLst=[]
         with torch.no_grad():
@@ -122,11 +126,6 @@ def main():
         accuracyLst=[]
         losses=[]
 
-
-    save_model = torch.jit.trace(net,  torch.rand(1, 1, 28, 28).to(device))
-    save_model.save("models/net.pth")
-
-    
     plt.savefig("accuracy_loss.jpg")
     plt.ioff() # 画动态图
-    plt.show() # 保留最后一张，程序结束后不关闭
+    plt.show() # 保留最后一张，程序结束后不关闭  
