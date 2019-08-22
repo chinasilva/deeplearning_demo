@@ -37,7 +37,6 @@ class PNet(nn.Module):
         boundingbox=self.boundingboxMethod(feature)
         landmark=self.landmarkMethod(y)
         iou=self.iouClassMethod(feature)
-        iou=self.sigmod(iou)
 
         return outputClass,boundingbox,landmark,iou,feature
 
@@ -72,7 +71,6 @@ class RNet(nn.Module):
         boundingbox=self.boundingboxMethod(feature)
         landmark=self.landmarkMethod(feature)
         iou=self.iouClassMethod(feature)
-        iou=self.sigmod(iou)
         return classification,boundingbox,landmark,iou,feature
 
 class ONet(nn.Module):
@@ -110,7 +108,6 @@ class ONet(nn.Module):
         boundingbox=self.boundingboxMethod(feature)
         landmark=self.landmarkMethod(feature)
         iou=self.iouClassMethod(feature)
-        iou=self.sigmod(iou)
         return classification,boundingbox,landmark,iou,feature
 
 class CenterLoss(nn.Module):
