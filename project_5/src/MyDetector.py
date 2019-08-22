@@ -17,8 +17,8 @@ import mynms
 class MyDetector():
     def __init__(self,testImagePath,netPath):
         
-        self.device=deviceFun()
-        self.pnet=torch.load(netPath+'/PNet.pth')
+        self.device=deviceFun(cpu=False)
+        self.pnet=torch.load(netPath+'/PNet.pth')#,map_location="cpu"
         self.rnet=torch.load(netPath+'/RNet.pth')
         self.onet=torch.load(netPath+'/ONet.pth')
         self.testImagePath=testImagePath
@@ -196,7 +196,7 @@ class MyDetector():
         return torch.stack(outLst),np.stack(outLst2) #将PNet出来的图片进行下一步操作
 
     def rnetDetector(self,img,PLst,PLst2):
-        # self.screenImgTest(PLst2,self.imgName,'PNet')
+        self.screenImgTest(PLst2,self.imgName,'PNet')
         RLst=[] #从PNet返回找到人脸的框
         with torch.no_grad():
             outLst=[]
@@ -245,7 +245,7 @@ class MyDetector():
         return torch.stack(outLst),np.stack(outLst2)
     
     def onetDetector(self,img,RLst,RLst2):
-        # self.screenImgTest(RLst2,self.imgName,'RNet')
+        self.screenImgTest(RLst2,self.imgName,'RNet')
         OLst=[] #从PNet返回找到人脸的框
         with torch.no_grad():
             pos=[]

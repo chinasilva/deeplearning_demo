@@ -240,8 +240,11 @@ def iouSpecial(box, boxes, isMin = False):
         np.where(ovr==1)
     return ovr
     
-def deviceFun():
-    device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+def deviceFun(cpu=False):
+    if cpu:
+        device=torch.device("cpu")
+    else:
+        device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
     return device
 

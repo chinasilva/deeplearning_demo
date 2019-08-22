@@ -113,14 +113,16 @@ def readVideo():
     netPath=r'/home/chinasilva/code/deeplearning_homework/project_5/model'
     myDetector=MyDetector(testImagePath,netPath)
     # cap = cv2.VideoCapture('/home/chinasilva/Downloads/jiangnanstyle.mp4')
-    cap = cv2.VideoCapture('/home/chinasilva/Downloads/jiangnanstyle2.webm')
-    # cap = cv2.VideoCapture('/home/chinasilva/Downloads/video/3.wmv')
+    # cap = cv2.VideoCapture('/home/chinasilva/Downloads/jiangnanstyle2.webm')
+    # cap = cv2.VideoCapture('/home/chinasilva/code/deeplearning_homework/project_5/images_val/mytest/videoplayback.mp4')
+    # cap = cv2.VideoCapture('/home/chinasilva/code/deeplearning_homework/project_5/images_val/mytest/jackchan.mp4')
+    cap = cv2.VideoCapture('/home/chinasilva/Downloads/video/3.wmv')
     # cap = cv2.VideoCapture('/home/chinasilva/Downloads/dance.webm')
     
     # 建个窗口并命名
     cv2.namedWindow("video",1)
     c=0
-    num = 0
+    num = 3
     frame_interval=1 # frame intervals  
     # 用于循环显示图片，达到显示视频的效果
     while(cap.isOpened()):
@@ -140,12 +142,12 @@ def readVideo():
         if(c%timeF == 0):
             if ret == True:
                 myDetector.video(img,frame)
-                cv2.imshow("video" , frame)
             else:
                 break
             #因为视频是10帧每秒，因此每一帧等待100ms
             if cv2.waitKey(25) & 0xFF == ord('q'):
                 break
+        cv2.imshow("video" , frame)
         c+=1
     cap.release()
     cv2.destroyAllWindows()

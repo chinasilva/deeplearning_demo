@@ -47,7 +47,7 @@ class MyData(data.Dataset):
             offset=torch.Tensor(offset)#.squeeze()
             with Image.open(os.path.join(self.imgPath,imgPath2,imgName)).convert('RGB') as img:
                 imageData=trans.ToTensor()(img)- 0.5
-                return imageData,offset
+                return imageData,offset,imgName
         except Exception as e:
             print("__getitem__",str(e))
             # return torch.Tensor(3,1,1),torch.Tensor(5)

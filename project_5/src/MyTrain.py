@@ -44,9 +44,9 @@ class MyTrain():
         self.epoch=epoch
         self.myData=MyData(tagPath,imgPath)
         self.testData=MyData(testTagPath,testImgPath)
-        self.lossFun1=nn.MSELoss(reduction='none')
-        self.lossFun2=nn.MSELoss(reduction='none')
-        self.lossFun3=nn.MSELoss(reduction='none')
+        self.lossFun1=nn.MSELoss()#reduction='none'
+        self.lossFun2=nn.MSELoss()#reduction='none'
+        self.lossFun3=nn.MSELoss()#reduction='none'
         # self.lossFun1=nn.BCELoss()
         # self.lossFun2=nn.MSELoss()
         # self.lossFun3=nn.MSELoss()
@@ -61,14 +61,14 @@ class MyTrain():
         # self.optimizer3 = torch.optim.Adam(self.center_loss_layer.parameters())
 
         # self.optimizer=torch.optim.Adam(self.net.parameters())
-        self.optimizer2=torch.optim.SGD(self.net.parameters(), lr=0.0001,momentum=0.9,weight_decay=0.0005)
-        # self.optimizer2 = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
+        self.optimizer=torch.optim.SGD(self.net.parameters(), lr=0.0001,momentum=0.9,weight_decay=0.0005)
+        self.optimizer2 = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
 
 
         
     def train(self):
-        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,num_workers=4) #,drop_last=True
-        testData=data.DataLoader(self.testData,batch_size=512,shuffle=True)#,num_workers=4
+        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True) #,drop_last=True,num_workers=4
+        testData=data.DataLoader(self.testData,batch_size=512,shuffle=True,num_workers=4)#
         losslst=[]
         # retLayer=ArcMarginProduct(32,2)
         testlosses=[]
@@ -78,7 +78,7 @@ class MyTrain():
             
             # print("epoch:",i)
             try:
-                for j,(img,offset) in enumerate(trainData):
+                for j,(img,offset,imgName) in enumerate(trainData):
                     #训练分为两种损失
                     #1.negative与positive
                     #2.positive与part
@@ -104,7 +104,7 @@ class MyTrain():
                     # centerLoss2=retLayer(centerLoss,target1)
                     # loss5=self.criterion(centerLoss2.to(self.device),target1.view(-1).long().to(self.device))
 
-                    loss1=self.onlineHardSampleMining(loss1,output1,hardRate=0.7)
+                    # loss1=self.onlineHardSampleMining(loss1,output1,hardRate=0.7)
                     
 
                     index2=offset[:,0]!=MyEnum.negative.value # 过滤非人脸样本，进行比较
@@ -115,16 +115,15 @@ class MyTrain():
 
                     loss2=self.lossFun2(target2.to(self.device),output2.to(self.device))
 
-                    loss2=self.onlineHardSampleMining(loss2,output2,hardRate=0.7)
-
-                    # output3=iouValue.view(-1,1)
-                    # target3=self.learnIOU(offset=offset,size=self.size)
-                    # target3=torch.tensor(target3).view(-1,1)
-                    # loss3=self.lossFun3(target3.to(self.device),output3.to(self.device))
+                    # loss2=self.onlineHardSampleMining(loss2,output2,hardRate=0.7)
+                    output3=iouValue.view(-1,1)
+                    target3=self.learnIOU(offset=offset,size=self.size)
+                    target3=torch.tensor(target3).view(-1,1)
+                    loss3=self.lossFun3(target3.to(self.device),output3.to(self.device))
                     # loss3=self.onlineHardSampleMining(loss3,output3,hardRate=0.7)
                     
                     
-                    loss=loss1+loss2#+loss_center #+loss3 0.5*
+                    loss=loss1+0.5*loss2+0.5*loss3#+loss_center #+loss3 0.5*
 
 
                     # 2.1 loss regularization
@@ -152,10 +151,10 @@ class MyTrain():
                     #     torch.save(self.net,self.modelPath)
                     #     print("epoch:{0},batch:{1}, loss1:{2},loss2:{3},loss_center:{4},loss:{5}".format(i,j,loss1.data,loss2.data,loss_center.data,loss.data))
                     #     print("end")
-                    if j%1000==0:  #每100批次打印loss
+                    if j%100==0:  #每100批次打印loss
                         b=datetime.now()
                         c=(b-a).microseconds//1000
-                        print("epoch:{0},batch:{1}, loss1:{2},loss2:{3},loss_center:{4},loss:{5},用时{6}ms".format(i,j,loss1.data,loss2.data,loss_center.data,loss.data,c))
+                        print("epoch:{0},batch:{1}, loss1:{2},loss2:{3},loss3:{4},loss:{5},用时{6}ms".format(i,j,loss1.data,loss2.data,loss3.data,loss.data,c))
                         torch.save(self.net,self.modelPath)
                         print("save,success!!!")
                         tagLst=[]
@@ -194,7 +193,7 @@ class MyTrain():
         tureTotal=0.
         loss=0.
         # totalLoss=0.
-        for x,(input, target) in enumerate(testData):
+        for x,(input, target,imgName) in enumerate(testData):
             if x>9:#每次测试选取10*size个样本
                 break
             input, myTarget = input.to(self.device), target.to(self.device)
@@ -258,7 +257,7 @@ class MyTrain():
         y2=size-offsetNew[:,3]
         boxes=torch.stack((x1,y1,x2,y2),dim=1)
         iouValue=iou((0,0,size,size),boxes.numpy()) #以(0,0,size,size)为右下角坐标
-        iouValue=np.where(iouValue==1,0,iouValue) #对负样本iou进行强制为0
+        iouValue=np.where(iouValue==1,0,iouValue) #对负样本iou进行强制为0,因为标签中负样本偏移量默认为0
         return iouValue
 
     def draw(self,i,losses,losses2):
