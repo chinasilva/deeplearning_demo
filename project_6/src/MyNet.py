@@ -69,11 +69,10 @@ class ConvolutionalSet(torch.nn.Module):
         return self.sub_module(x)
 
 
-class MyNet(torch.nn.Module):
+class DarkNet(torch.nn.Module):
 
     def __init__(self):
         super().__init__()
-
         self.trunk_52 = torch.nn.Sequential(
             ConvolutionalLayer(3, 32, 3, 1, 1),
             ConvolutionalLayer(32, 64, 3, 2, 1),
@@ -94,7 +93,6 @@ class MyNet(torch.nn.Module):
             ResidualLayer(256),
             ResidualLayer(256),
         )
-
         self.trunk_26 = torch.nn.Sequential(
             DownsamplingLayer(256, 512),
             ResidualLayer(512),
@@ -106,7 +104,6 @@ class MyNet(torch.nn.Module):
             ResidualLayer(512),
             ResidualLayer(512),
         )
-
         self.trunk_13 = torch.nn.Sequential(
             DownsamplingLayer(512, 1024),
             ResidualLayer(1024),
@@ -115,48 +112,87 @@ class MyNet(torch.nn.Module):
             ResidualLayer(1024)
         )
 
-        self.convset_13 = torch.nn.Sequential(
-            ConvolutionalSet(1024, 512)
-        )
-
-        self.detetion_13 = torch.nn.Sequential(
-            ConvolutionalLayer(512, 1024, 3, 1, 1),
-            torch.nn.Conv2d(1024, 3*(cfg.CLASS_NUM+5), 1, 1, 0)
-        )
-
-        self.up_26 = torch.nn.Sequential(
-            ConvolutionalLayer(512, 256, 1, 1, 0),
-            UpsampleLayer()
-        )
-
-        self.convset_26 = torch.nn.Sequential(
-            ConvolutionalSet(768, 256)
-        )
-
-        self.detetion_26 = torch.nn.Sequential(
-            ConvolutionalLayer(256, 512, 3, 1, 1),
-            torch.nn.Conv2d(512, 3*(cfg.CLASS_NUM+5), 1, 1, 0)
-        )
-
-        self.up_52 = torch.nn.Sequential(
-            ConvolutionalLayer(256, 128, 1, 1, 0),
-            UpsampleLayer()
-        )
-
-        self.convset_52 = torch.nn.Sequential(
-            ConvolutionalSet(384, 128)
-        )
-
-        self.detetion_52 = torch.nn.Sequential(
-            ConvolutionalLayer(128, 256, 3, 1, 1),
-            torch.nn.Conv2d(256, 3*(cfg.CLASS_NUM+5), 1, 1, 0)
-        )
-
     def forward(self, x):
         h_52 = self.trunk_52(x)
         h_26 = self.trunk_26(h_52)
         h_13 = self.trunk_13(h_26)
+        return h_52,h_26,h_13
 
+class MyNet(torch.nn.Module):
+    def __init__(self,cls_num):
+        super().__init__()
+        self.trunk_52 = torch.nn.Sequential(
+            ConvolutionalLayer(3, 32, 3, 1, 1),
+            ConvolutionalLayer(32, 64, 3, 2, 1),
+
+            ResidualLayer(64),
+            DownsamplingLayer(64, 128),
+
+            ResidualLayer(128),
+            ResidualLayer(128),
+            DownsamplingLayer(128, 256),
+
+            ResidualLayer(256),
+            ResidualLayer(256),
+            ResidualLayer(256),
+            ResidualLayer(256),
+            ResidualLayer(256),
+            ResidualLayer(256),
+            ResidualLayer(256),
+            ResidualLayer(256),
+        )
+        self.trunk_26 = torch.nn.Sequential(
+            DownsamplingLayer(256, 512),
+            ResidualLayer(512),
+            ResidualLayer(512),
+            ResidualLayer(512),
+            ResidualLayer(512),
+            ResidualLayer(512),
+            ResidualLayer(512),
+            ResidualLayer(512),
+            ResidualLayer(512),
+        )
+        self.trunk_13 = torch.nn.Sequential(
+            DownsamplingLayer(512, 1024),
+            ResidualLayer(1024),
+            ResidualLayer(1024),
+            ResidualLayer(1024),
+            ResidualLayer(1024)
+        )
+        self.convset_13 = torch.nn.Sequential(
+            ConvolutionalSet(1024, 512)
+        )
+        self.detetion_13 = torch.nn.Sequential(
+            ConvolutionalLayer(512, 1024, 3, 1, 1),
+            torch.nn.Conv2d(1024, 3*(cls_num+5), 1, 1, 0)
+        )
+        self.up_26 = torch.nn.Sequential(
+            ConvolutionalLayer(512, 256, 1, 1, 0),
+            UpsampleLayer()
+        )
+        self.convset_26 = torch.nn.Sequential(
+            ConvolutionalSet(768, 256)
+        )
+        self.detetion_26 = torch.nn.Sequential(
+            ConvolutionalLayer(256, 512, 3, 1, 1),
+            torch.nn.Conv2d(512, 3*(cls_num+5), 1, 1, 0)
+        )
+        self.up_52 = torch.nn.Sequential(
+            ConvolutionalLayer(256, 128, 1, 1, 0),
+            UpsampleLayer()
+        )
+        self.convset_52 = torch.nn.Sequential(
+            ConvolutionalSet(384, 128)
+        )
+        self.detetion_52 = torch.nn.Sequential(
+            ConvolutionalLayer(128, 256, 3, 1, 1),
+            torch.nn.Conv2d(256, 3*(cls_num+5), 1, 1, 0)
+        )
+    
+    def forward(self,x):
+        h_52 = self.trunk_52(x)
+        h_26 = self.trunk_26(h_52)
+        h_13 = self.trunk_13(h_26)
         convset_out_13 = self.convset_13(h_13)
         detetion_out_13 = self.detetion_13(convset_out_13)
 
@@ -171,7 +207,6 @@ class MyNet(torch.nn.Module):
         route_out_52 = torch.cat((up_out_52, h_52), dim=1)
         convset_out_52 = self.convset_52(route_out_52)
         detetion_out_52 = self.detetion_52(convset_out_52)
-
         return detetion_out_13, detetion_out_26, detetion_out_52
 
 

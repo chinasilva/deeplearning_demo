@@ -5,7 +5,7 @@ from torch.utils import data
 import os
 from datetime import datetime
 from MyData import MyData
-from MyNet import MyNet
+from MyNet import MyNet,DarkNet
 from utils import deviceFun,writeTag
 import multiprocessing
 from cfg import *  
@@ -16,13 +16,33 @@ class MyTrain():
         self.batchSize=batchSize
         self.epoch=epoch
         self.myData=MyData()
-        self.modelLoction=MODEL_PATH
+        self.preModelLoction=PRE_MODEL_PATH
         self.lossFun=nn.MSELoss()
-        self.net=MyNet().to(self.device)
-        if os.path.exists(self.modelLoction):
-            self.net=torch.load(self.modelLoction)
-        self.optimizer=torch.optim.Adam(self.net.parameters())
+        self.net=MyNet(cls_num=CLASS_NUM).to(self.device)
+        self.darkNet=DarkNet().to(self.device)
+        self.loadModel(self.preModelLoction)
+        self.optimizer=torch.optim.Adam(filter(lambda p: p.requires_grad!=None ,self.net.parameters()))
     
+    def loadModel(self,preModelLoction):
+        mynetDict=torch.load(MODEL_PATH)
+        
+        pretrainedDict=torch.load(preModelLoction)#, map_location=self.device
+        modelDict = self.darkNet.state_dict()
+        # 筛除不加载的层结构,
+        # 加载已有预加载模型参数，并将梯度更新状态改为None(默认为False),优化器中只需要过滤掉None的即可
+        pretrainedDict2 = {k: v for k, v in pretrainedDict.items() if k in modelDict}
+        for k,v in pretrainedDict2.items():
+            v.float().requires_grad=None
+            pretrainedDict2[k]=v
+        
+        # 更新当前网络的结构字典
+        mynetDict.update(pretrainedDict2)
+        # mynetDict.update(pretrainedDict3)
+        self.net.load_state_dict(mynetDict)
+        # # 梯度不更新
+        # for param in self.net.parameters():
+        #     param.requeires_grad=False
+
     def myLoss(self,output,target,alpha):
         output=output.permute(0,2,3,1) #(n,h,w,c)
         output=output.reshape(output.size(0),output.size(1),output.size(2),3,-1) #(n,h,w,3,c)
@@ -58,8 +78,8 @@ class MyTrain():
 
                     b=datetime.now()
                     c=(b-a).microseconds//1000
-                    print("epoch:{},batch:{}, loss1:{},loss2:{},loss3:{},loss:{},用时{}ms".format(i,j,loss1.data,loss2.data,loss3.data,loss.data,c))
-                    torch.save(self.net,MODEL_PATH)
+                    print("epoch:{},batch:{}, loss1:{},loss2net:{},loss3:{},loss:{},用时{}ms".format(i,j,loss1.data,loss2.data,loss3.data,loss.data,c))
+                    torch.save(self.net.state_dict(),MODEL_PATH)
             except Exception as e:
                 print("train",str(e))
   

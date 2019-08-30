@@ -44,3 +44,7 @@ IMG_PATH='/home/chinasilva/code/deeplearning_homework/project_6/data/val2017'
 IMG_TEST_PATH='/home/chinasilva/code/deeplearning_homework/project_6/data/testImg'
 
 MODEL_PATH='/home/chinasilva/code/deeplearning_homework/project_6/model/model.pth'
+
+# PRE_MODEL_PATH='/home/chinasilva/code/deeplearning_homework/project_6/model/yolov3.weights'
+PRE_MODEL_PATH='/home/chinasilva/code/deeplearning_homework/project_6/model/darknet53.pt'
+

@@ -67,7 +67,7 @@ class MyTrain():
 
         
     def train(self):
-        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True) #,drop_last=True,num_workers=4
+        trainData=data.DataLoader(self.myData,batch_size=self.batchSize,shuffle=True,num_workers=4) #,drop_last=True
         testData=data.DataLoader(self.testData,batch_size=512,shuffle=True,num_workers=4)#
         losslst=[]
         # retLayer=ArcMarginProduct(32,2)

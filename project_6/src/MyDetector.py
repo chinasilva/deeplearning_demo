@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import cv2
 import MyTrain
-import MyNet
+from MyNet import MyNet
 from utils import nms,deviceFun,screenImgTest,readTag
 from cfg import * 
 
@@ -18,11 +18,16 @@ class MyDetector(nn.Module):
     def __init__(self):
         super().__init__()
         self.device=deviceFun()
-        self.net=torch.load(MODEL_PATH)
+        self.net=MyNet()
+        # self.loadModel()
+        self.net=self.net.load_state_dict(torch.load(PRE_MODEL_PATH, map_location=self.device))
+# torch.load(PRE_MODEL_PATH,)
         self.trainImagePath=IMG_PATH
         self.net.eval()
         self.imgName=''
-    
+
+
+
     def forward(self,input, thresh):
         with torch.no_grad():
           anchors=ANCHORS_GROUP
@@ -107,36 +112,33 @@ if __name__ == "__main__":
     detector=MyDetector()
     dataset=[]
     data=readTag(TAG_PATH)# TAG_PATH
+    # imgPath=IMG_PATH
+    imgPath=IMG_TEST_PATH
     #根据所读的每个标签进行循环
-    for _,line in enumerate(data) :
-        imageInfo = line.split()#将单个数据分隔开存好
-        dataset.append(imageInfo)
+    # for _,line in enumerate(data) :
+    #     imageInfo = line.split()#将单个数据分隔开存好
+    #     dataset.append(imageInfo)
+    dataset.extend(os.listdir(imgPath))
     for i,imgInfo in enumerate(dataset):
-            imgName=imgInfo[0]
-            imgData= Image.open(os.path.join(IMG_PATH,imgName))
+            # imgName=imgInfo[0]
+            imgName=imgInfo
+            imgData= Image.open(os.path.join(imgPath,imgName))
             imgData2=trans.Resize((IMG_WIDTH,IMG_HEIGHT))(imgData)
             imgData2=trans.ToTensor()(imgData2)- 0.5
             imgData2=imgData2.unsqueeze(0)
             #网络
             last_boxes=np.array(detector(imgData2,thresh=0.6))
             
-            # #标签
-            # boxes=np.array([float(i) for i in imgInfo[1:]])
-            # boxes2=np.split(boxes,len(boxes)//5) #标签为多分类，产生多个标记框
-            # last_boxes=np.array(boxes2)
-            # last_boxes=last_boxes.reshape(1,last_boxes.shape[0],last_boxes.shape[1])
-            # last_boxes=np.array(boxes2)[:,1:5]
-
             if last_boxes.size==0:
                 print("nothing found!!!")
                 continue
+            print("imgName:",imgName)
             # 网络
             outLst2=last_boxes[:, :, [1, 2, 3, 4, 5]]
             
             # 标签
             # outLst2=last_boxes[:, :, [1, 2, 3, 4, 0]]
             outLst2=outLst2.reshape(-1,5)
-            print("outLst2:",outLst2.shape)
             w_scale, h_scale = imgData.size[0] / IMG_WIDTH, imgData.size[1] / IMG_HEIGHT
             cx=outLst2[:,0]*w_scale
             cy=outLst2[:,1]*h_scale
@@ -150,4 +152,4 @@ if __name__ == "__main__":
             outLst2[:,2]=w
             outLst2[:,3]=h
             outLst2[:,4]=cls
-            screenImgTest(testImagePath=IMG_PATH,outLst2=outLst2,imgName=imgName,text="")
+            screenImgTest(testImagePath=imgPath,outLst2=outLst2,imgName=imgName,text="")
