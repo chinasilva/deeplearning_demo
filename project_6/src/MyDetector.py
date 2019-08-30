@@ -28,6 +28,11 @@ class MyDetector(nn.Module):
 
 
 
+        self.net=torch.load(MODEL_PATH)
+        self.trainImagePath=IMG_PATH
+        self.net.eval()
+        self.imgName=''
+    
     def forward(self,input, thresh):
         with torch.no_grad():
           anchors=ANCHORS_GROUP
@@ -123,6 +128,13 @@ if __name__ == "__main__":
             # imgName=imgInfo[0]
             imgName=imgInfo
             imgData= Image.open(os.path.join(imgPath,imgName))
+    #根据所读的每个标签进行循环
+    for _,line in enumerate(data) :
+        imageInfo = line.split()#将单个数据分隔开存好
+        dataset.append(imageInfo)
+    for i,imgInfo in enumerate(dataset):
+            imgName=imgInfo[0]
+            imgData= Image.open(os.path.join(IMG_PATH,imgName))
             imgData2=trans.Resize((IMG_WIDTH,IMG_HEIGHT))(imgData)
             imgData2=trans.ToTensor()(imgData2)- 0.5
             imgData2=imgData2.unsqueeze(0)
