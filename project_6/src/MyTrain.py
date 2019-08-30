@@ -8,7 +8,7 @@ from MyData import MyData
 from MyNet import MyNet,DarkNet
 from utils import deviceFun,writeTag
 import multiprocessing
-from cfg import *  
+from cfg import * 
 
 class MyTrain():
     def __init__(self,batchSize,epoch):
