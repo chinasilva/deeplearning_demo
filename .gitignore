@@ -7,3 +7,5 @@
 *.jpeg
 *.zip
 
+*.pt
+*.weights
