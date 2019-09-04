@@ -18,3 +18,5 @@ project7:Center Loss,Arc Loss项目实战
 project8:RCNN,SLTM,GRU 循环神经网络数字10分类
 
 project10:一维卷积实现电力信号检测，异常报警
+
+project11:DCGNN卡通人脸生成
