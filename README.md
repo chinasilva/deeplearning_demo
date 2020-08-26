@@ -1,5 +1,5 @@
 # deeplearning_homework
-深度学习，项目作业
+深度学习
 
 project1:生成一堆随机的点，用神经网络去拟合这堆点，并将最终结果显示在matplotlib上
 
